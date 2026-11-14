@@ -12,7 +12,8 @@ public sealed class ScopeCapture
  readonly float[] left,right;
  readonly int bytesPerSample,blockAlign;
  readonly bool floating;
- long written,validFrom;
+ long written,validFrom;int generation;
+ public int Generation{get{lock(gate)return generation;}}
  public int SampleRate{get;}
  public int Channels{get;}
  public int WindowFrames=>Math.Max(2,SampleRate/40); // 25 ms across the plot
@@ -60,12 +61,15 @@ public sealed class ScopeCapture
   }
  }
  // A seek discards old visualization history but keeps the output device's monotonic timeline.
- public void Clear(){lock(gate)validFrom=written;}
+ public void Clear(){lock(gate){validFrom=written;generation++;}}
  public int CopyWindow(long audibleFrame,Span<float> destinationLeft,Span<float> destinationRight,int requestedFrames=0)
+  =>CopyWindow(audibleFrame,destinationLeft,destinationRight,out _,requestedFrames);
+ public int CopyWindow(long audibleFrame,Span<float> destinationLeft,Span<float> destinationRight,out long endFrame,int requestedFrames=0)
  {
   lock(gate)
   {
    long start=Math.Max(validFrom,written-left.Length),end=Math.Min(audibleFrame,written);
+   endFrame=end;
    if(end<=start)return 0;
    int count=(int)Math.Min(Math.Min(end-start,requestedFrames>0?requestedFrames:BufferSize),Math.Min(destinationLeft.Length,destinationRight.Length));
    int slot=(int)((end-count)%left.Length),first=Math.Min(count,left.Length-slot);
@@ -124,6 +128,7 @@ public sealed partial class OscilloscopeView : FrameworkElement
  ScopeCapture? capture;
  float[] left=[],right=[];
  int count;
+ long scopeEndFrame;int captureGeneration;
  bool subscribed;
  TimeSpan lastFrame=TimeSpan.MinValue;
  readonly VisualizerFramePacer framePacer=new();
@@ -134,7 +139,7 @@ public sealed partial class OscilloscopeView : FrameworkElement
  Pen? primary,secondary,glow,axis;
  public OscilloscopeView(){Loaded+=(_,_)=>Subscribe();Unloaded+=(_,_)=>Subscribe();IsVisibleChanged+=(_,_)=>Subscribe();ClipToBounds=true;InitializeMenu();}
  static void Changed(DependencyObject sender,DependencyPropertyChangedEventArgs e)=>((OscilloscopeView)sender).Subscribe();
- static void BrushChanged(DependencyObject sender,DependencyPropertyChangedEventArgs e){var view=(OscilloscopeView)sender;view.primary=view.secondary=view.glow=view.axis=null;view.labels.Clear();}
+ static void BrushChanged(DependencyObject sender,DependencyPropertyChangedEventArgs e){var view=(OscilloscopeView)sender;view.primary=view.secondary=view.glow=view.axis=null;view.labels.Clear();view.spectrogramColorDirty=true;}
  void ClearPens(){primary=secondary=glow=axis=null;labels.Clear();InvalidateVisual();}
  void Subscribe()
  {
@@ -159,12 +164,13 @@ public sealed partial class OscilloscopeView : FrameworkElement
   if(current==null){count=0;ResetAnalysis();InvalidateVisual();return;}
   if(!ReferenceEquals(capture,current))
   {
-   capture=current;ResetAnalysis();immediate=true;
+   capture=current;captureGeneration=current.Generation;ResetAnalysis();immediate=true;
    int capacity=Math.Max(current.BufferSize,Math.Max(SpectrumAnalysis.SizeForRate(current.SampleRate),(int)Math.Ceiling(current.SampleRate*.3)));
    if(left.Length!=capacity){left=new float[capacity];right=new float[capacity];}
   }
-  int requested=Mode switch{VisualizerMode.Spectrum=>SpectrumAnalysis.SizeForRate(current.SampleRate),VisualizerMode.VuMeter=>(int)Math.Ceiling(current.SampleRate*.3),_=>current.BufferSize};
-  count=Engine!.CopyScope(current,left,right,requested);UpdateAnalysis(immediate);InvalidateVisual();
+  if(captureGeneration!=current.Generation){captureGeneration=current.Generation;ResetAnalysis();immediate=true;}
+  int requested=Mode switch{VisualizerMode.Spectrum or VisualizerMode.Spectrogram=>SpectrumAnalysis.SizeForRate(current.SampleRate),VisualizerMode.VuMeter=>(int)Math.Ceiling(current.SampleRate*.3),_=>current.BufferSize};
+  count=Engine!.CopyScope(current,left,right,out scopeEndFrame,requested);UpdateAnalysis(immediate);InvalidateVisual();
  }
  void Pens()
  {
@@ -178,6 +184,7 @@ public sealed partial class OscilloscopeView : FrameworkElement
   drawing.DrawRectangle(Brushes.Transparent,null,new Rect(RenderSize));Pens();
   if(Mode==VisualizerMode.Spectrum){RenderSpectrum(drawing);return;}
   if(Mode==VisualizerMode.VuMeter){RenderVu(drawing);return;}
+  if(Mode==VisualizerMode.Spectrogram){RenderSpectrogram(drawing);return;}
   double middle=ActualHeight/2,amplitude=Math.Max(1,middle-4);
   drawing.DrawLine(axis,new Point(0,middle),new Point(ActualWidth,middle));
   if(count<2||capture==null)return;

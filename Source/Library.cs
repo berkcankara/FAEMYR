@@ -114,6 +114,7 @@ public sealed class LibraryStore : IDisposable
  public void Save(Track t){using var c=db.CreateCommand();c.CommandText="INSERT INTO tracks VALUES($p,$j) ON CONFLICT(path) DO UPDATE SET json=$j";c.Parameters.AddWithValue("$p",t.Path);c.Parameters.AddWithValue("$j",JsonSerializer.Serialize(t));c.ExecuteNonQuery();}
  public void SaveMany(IEnumerable<Track> tracks){using var tx=db.BeginTransaction();using var cmd=db.CreateCommand();cmd.Transaction=tx;cmd.CommandText="INSERT INTO tracks VALUES($p,$j) ON CONFLICT(path) DO UPDATE SET json=$j";var p=cmd.Parameters.Add("$p",SqliteType.Text);var j=cmd.Parameters.Add("$j",SqliteType.Text);foreach(var track in tracks){p.Value=track.Path;j.Value=JsonSerializer.Serialize(track);cmd.ExecuteNonQuery();}tx.Commit();}
  public void Delete(string path){using var c=db.CreateCommand();c.CommandText="DELETE FROM tracks WHERE path=$p";c.Parameters.AddWithValue("$p",path);c.ExecuteNonQuery();}
+ public void DeleteMany(IEnumerable<string> paths){using var tx=db.BeginTransaction();using var c=db.CreateCommand();c.Transaction=tx;c.CommandText="DELETE FROM tracks WHERE path=$p";var p=c.Parameters.Add("$p",SqliteType.Text);foreach(var path in paths){p.Value=path;c.ExecuteNonQuery();}tx.Commit();}
  public void Dispose()=>db.Dispose();
 }
 public static class MetadataReader

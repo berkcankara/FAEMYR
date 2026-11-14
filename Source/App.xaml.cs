@@ -7,6 +7,7 @@ public partial class App : Application
  {
   base.OnStartup(e);
   L.Load();
+  if(e.Args.Length>=2&&e.Args[0]=="--library-sync-test"){try{await LibrarySyncTests.Run(e.Args[1]);Shutdown(0);}catch(Exception ex){System.IO.Directory.CreateDirectory(e.Args[1]);System.IO.File.WriteAllText(System.IO.Path.Combine(e.Args[1],"library-sync-error.txt"),ex.ToString());Shutdown(1);}return;}
   if(e.Args.Length>=2&&e.Args[0]=="--startup-smoke-test"){try{await StartupSmokeTests.Run(e.Args[1]);Shutdown(0);}catch(Exception ex){System.IO.Directory.CreateDirectory(e.Args[1]);System.IO.File.WriteAllText(System.IO.Path.Combine(e.Args[1],"startup-smoke-error.txt"),ex.ToString());Shutdown(1);}return;}
   if(e.Args.Length>=2&&e.Args[0]=="--desktop-players-test"){try{await DesktopPlayersTests.Run(e.Args[1]);Shutdown(0);}catch(Exception ex){System.IO.Directory.CreateDirectory(e.Args[1]);System.IO.File.WriteAllText(System.IO.Path.Combine(e.Args[1],"desktop-players-error.txt"),ex.ToString());Shutdown(1);}return;}
   if(e.Args.Length>=2&&e.Args[0]=="--endpoint-sharing-test"){try{await EndpointSharingTests.Run(e.Args[1]);Shutdown(0);}catch(Exception ex){System.IO.Directory.CreateDirectory(e.Args[1]);System.IO.File.WriteAllText(System.IO.Path.Combine(e.Args[1],"endpoint-sharing-error.txt"),ex.ToString());Shutdown(1);}return;}

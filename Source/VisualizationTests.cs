@@ -40,7 +40,7 @@ public static class VisualizationTests
   check(VuAnalysis.Smooth(0,1,.033)>1-VuAnalysis.Smooth(1,0,.033)&&VuAnalysis.Unit(-30,-60)==.5,"Meter mapping preserves the dB scale and attack/release stays bounded");
   var partial=new SpectrumAnalysis(44100);check(partial.Analyze(new[]{0f,float.NaN,0f},new[]{0f,float.PositiveInfinity,0f},2).ToArray().All(double.IsFinite),"A partial startup FFT with nonfinite samples remains safe");
   var view=new OscilloscopeView();view.Mode=VisualizerMode.Spectrum;
-  check(view.ContextMenu.Items.Count==3&&view.ContextMenu.Items.Cast<MenuItem>().Count(item=>item.IsChecked)==1&&((MenuItem)view.ContextMenu.Items[1]).IsChecked,"Direct visualizer menu contains three modes and marks only the selected mode");
+  check(view.ContextMenu.Items.Count==4&&view.ContextMenu.Items.Cast<MenuItem>().Count(item=>item.IsChecked)==1&&((MenuItem)view.ContextMenu.Items[1]).IsChecked,"Direct visualizer menu contains four modes and marks only the selected mode");
   view.Mode=VisualizerMode.VuMeter;check(((MenuItem)view.ContextMenu.Items[2]).IsChecked&&!((MenuItem)view.ContextMenu.Items[1]).IsChecked,"Changing mode while idle updates its menu without requiring playback");
   string path=Path.Combine(directory,"visualizer-preferences.json");
   foreach(var mode in Enum.GetValues<VisualizerMode>()){new VisualizerPreferences{Mode=mode}.Save(path);check(VisualizerPreferences.Load(path).Mode==mode,"Visualizer mode persists: "+mode);}

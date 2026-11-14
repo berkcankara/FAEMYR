@@ -31,8 +31,8 @@ public partial class MainWindow
   Scope.Visibility=Visible(p.ShowVisualizer);Scope.MaximumFramesPerSecond=p.VisualizerFps;Scope.TraceWidth=p.TraceWidth;Scope.GlowOpacity=p.TraceGlow/100;Scope.Opacity=p.TraceOpacity/100;
   if(p.LyricsGlow)LyricsCard.SetResourceReference(InnerAccentBorder.GlowBrushProperty,"LyricsAccent");else LyricsCard.GlowBrush=Brushes.Transparent;
   if(p.VisualizerMode.HasValue)Scope.Mode=p.VisualizerMode.Value;
-  ScopeAndSeek.RowDefinitions[0].Height=p.ShowVisualizer?new GridLength(1,GridUnitType.Star):new GridLength(0);ScopeAndSeek.RowDefinitions[1].Height=p.ShowSeek?(p.ShowVisualizer?new GridLength(22):new GridLength(1,GridUnitType.Star)):new GridLength(0);
-  Seek.Visibility=Visible(p.ShowSeek);Elapsed.Visibility=TotalTime.Visibility=Visible(p.ShowTimes&&p.ShowSeek);ScopeAndSeek.ColumnDefinitions[0].Width=ScopeAndSeek.ColumnDefinitions[2].Width=new GridLength(p.ShowTimes?36:0);
+  ScopeAndSeek.RowDefinitions[0].Height=new GridLength(1,GridUnitType.Star);ScopeAndSeek.RowDefinitions[1].Height=new GridLength(p.ShowSeek?22:0);
+  Seek.Visibility=Visible(p.ShowSeek);Elapsed.Visibility=TotalTime.Visibility=Visible(p.ShowTimes&&p.ShowSeek);ScopeAndSeek.ColumnDefinitions[0].Width=new GridLength(p.ShowTimes?36:0);ScopeAndSeek.ColumnDefinitions[2].Width=GridLength.Auto;
   Signal.MaxHeight=double.PositiveInfinity;Signal.FontSize=9.5*p.FontScale/100;Signal.LineHeight=11.5*p.FontScale/100;
   AlbumName.PreferredFontSize=p.AlbumTitleSize*p.FontScale/100;AlbumName.MaxHeight=170*p.FontScale/100;
   foreach(var (key,button) in new[]{("albums",NavAlbums),("artists",NavArtists),("tracks",NavTracks),("favorites",NavFavorites),("playlists",NavPlaylists),("queue",NavQueue)})button.Visibility=Visible(!p.HiddenNavigation.Contains(key));

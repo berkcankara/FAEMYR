@@ -3,7 +3,7 @@
     <OutputType>WinExe</OutputType><TargetFramework>net8.0-windows</TargetFramework>
     <UseWPF>true</UseWPF><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier><AssemblyName>Lyra</AssemblyName><RootNamespace>Ahenk</RootNamespace>
-    <Version>0.10.2</Version><Product>Lyra</Product><Title>Lyra</Title><ApplicationManifest>app.manifest</ApplicationManifest><ApplicationIcon>Assets\Lyra.ico</ApplicationIcon>
+    <Version>0.10.5</Version><Product>Lyra</Product><Title>Lyra</Title><ApplicationManifest>app.manifest</ApplicationManifest><ApplicationIcon>Assets\Lyra.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup><PackageReference Include="NAudio" Version="2.2.1"/><PackageReference Include="TagLibSharp" Version="2.3.0"/><PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.11"/></ItemGroup>
 <ItemGroup><EmbeddedResource Include="Assets\Icons\*.svg" /><EmbeddedResource Include="Assets\en.json" /><Resource Include="Assets\Lyra.ico" /></ItemGroup></Project>

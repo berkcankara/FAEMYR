@@ -22,7 +22,7 @@ public static class VisualizerStreamingTests
   Directory.CreateDirectory(directory);var checks=new List<object>();void Check(bool pass,string name){checks.Add(new{name,passed=pass});if(!pass)throw new Exception(name);}
   try
   {
-   OscilloscopeTests.Run(Check);VisualizationTests.Run(directory,Check);Themes.Apply("dark");
+   OscilloscopeTests.Run(Check);VisualizationTests.Run(directory,Check);SpectrogramTests.Run(directory,Check);Themes.Apply("dark");
    // Nonzero fixtures remain offline. No AudioClient or output device is opened here.
    foreach(int rate in new[]{44100,96000,192000})
    {
@@ -65,6 +65,8 @@ public static class VisualizerStreamingTests
   foreach(var mode in Enum.GetValues<VisualizerMode>())
   {
    view.Mode=mode;Set("capture",capture);Set("left",left);Set("right",right);Set("count",count);typeof(OscilloscopeView).GetMethod("UpdateAnalysis",BindingFlags.NonPublic|BindingFlags.Instance)!.Invoke(view,[true]);view.InvalidateVisual();view.UpdateLayout();
+   if(mode==VisualizerMode.Spectrogram)for(int frame=1;frame<=600;frame++){Set("scopeEndFrame",frame*capture.SampleRate/60L);typeof(OscilloscopeView).GetMethod("UpdateAnalysis",BindingFlags.NonPublic|BindingFlags.Instance)!.Invoke(view,[false]);}
+   view.InvalidateVisual();view.UpdateLayout();
    var bitmap=new RenderTargetBitmap(950,90,96,96,PixelFormats.Pbgra32);bitmap.Render(view);var encoder=new PngBitmapEncoder();encoder.Frames.Add(BitmapFrame.Create(bitmap));using(var file=File.Create(Path.Combine(directory,mode+".png")))encoder.Save(file);
    var bytes=new byte[950*90*4];bitmap.CopyPixels(bytes,950*4,0);int colored=0;for(int p=0;p<bytes.Length;p+=4)if(bytes[p+3]>100)colored++;check(colored>500,"Offline nonzero signal renders visible geometry in "+mode);
   }

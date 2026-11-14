@@ -9,7 +9,7 @@ using System.Windows.Media;
 
 namespace Ahenk;
 
-public enum VisualizerMode { Oscilloscope,Spectrum,VuMeter }
+public enum VisualizerMode { Oscilloscope,Spectrum,VuMeter,Spectrogram }
 public sealed class VisualizerPreferences
 {
  static readonly JsonSerializerOptions options=new(){WriteIndented=true,Converters={new JsonStringEnumConverter()}};
@@ -31,26 +31,26 @@ public sealed class SpectrumAnalysis
 {
  public const int BandCount=64;
  public const double FloorDb=-72;
- readonly double[] real,imaginary,window,power,levels=new double[BandCount];
+ readonly double[] real,imaginary,window,power,levels;
  readonly double normalization;
  public int SampleRate{get;}
  public int Size=>real.Length;
  public double MaximumFrequency=>Math.Min(20000,SampleRate/2.0);
  public static int SizeForRate(int sampleRate){int size=512;while(size<sampleRate*.085&&size<32768)size*=2;return size;}
- public double BandFrequency(int index)=>20*Math.Pow(MaximumFrequency/20,(index+.5)/BandCount);
- public SpectrumAnalysis(int sampleRate)
+ public double BandFrequency(int index)=>20*Math.Pow(MaximumFrequency/20,(index+.5)/levels.Length);
+ public SpectrumAnalysis(int sampleRate,int bands=BandCount)
  {
-  SampleRate=sampleRate;int size=SizeForRate(sampleRate);real=new double[size];imaginary=new double[size];window=new double[size];power=new double[size/2+1];
+  SampleRate=sampleRate;levels=new double[Math.Clamp(bands,1,256)];int size=SizeForRate(sampleRate);real=new double[size];imaginary=new double[size];window=new double[size];power=new double[size/2+1];
   double sum=0;for(int i=0;i<size;i++){window[i]=.5-.5*Math.Cos(2*Math.PI*i/(size-1));sum+=window[i];}normalization=4/(sum*sum);
  }
  public ReadOnlySpan<double> Analyze(ReadOnlySpan<float> left,ReadOnlySpan<float> right,int channels)
  {
   Array.Clear(power);Transform(left);if(channels>1)Transform(right);
   double divisor=channels>1?2:1;
-  for(int band=0;band<BandCount;band++)
+  for(int band=0;band<levels.Length;band++)
   {
-   double lower=20*Math.Pow(MaximumFrequency/20,band/(double)BandCount)*Size/SampleRate;
-   double upper=20*Math.Pow(MaximumFrequency/20,(band+1.0)/BandCount)*Size/SampleRate;
+   double lower=20*Math.Pow(MaximumFrequency/20,band/(double)levels.Length)*Size/SampleRate;
+   double upper=20*Math.Pow(MaximumFrequency/20,(band+1.0)/levels.Length)*Size/SampleRate;
    int first=Math.Max(1,(int)Math.Floor(lower)),last=Math.Min(Size/2,(int)Math.Ceiling(upper));double peak=0;
    for(int bin=first;bin<=last;bin++)
    {
@@ -118,8 +118,8 @@ public sealed partial class OscilloscopeView
  long analysisStamp;
  void InitializeMenu()
  {
-  ContextMenu=new ContextMenu();ToolTip="Sağ tıkla: Osiloskop, Spectrum veya VU metre";
-  foreach(var (mode,title) in new[]{(VisualizerMode.Oscilloscope,"Osiloskop"),(VisualizerMode.Spectrum,"Spectrum"),(VisualizerMode.VuMeter,"VU metre")})
+  ContextMenu=new ContextMenu();ToolTip=L.T("Sağ tıkla: Osiloskop, Spectrum, VU metre veya Spektrogram");
+  foreach(var (mode,title) in new[]{(VisualizerMode.Oscilloscope,L.T("Osiloskop")),(VisualizerMode.Spectrum,"Spectrum"),(VisualizerMode.VuMeter,L.T("VU metre")),(VisualizerMode.Spectrogram,L.T("Spektrogram"))})
   {
    var header=new StackPanel{Orientation=Orientation.Horizontal};
    var check=new TextBlock{Text="✓",Width=20,Visibility=Visibility.Hidden};check.SetResourceReference(TextBlock.ForegroundProperty,"Accent");header.Children.Add(check);header.Children.Add(new TextBlock{Text=title});modeChecks[mode]=check;
@@ -132,13 +132,14 @@ public sealed partial class OscilloscopeView
  static void ModeChanged(DependencyObject sender,DependencyPropertyChangedEventArgs e)
  {
   var view=(OscilloscopeView)sender;view.ResetAnalysis();view.SyncModeMenu();view.ReadFrame(true);
-  System.Windows.Automation.AutomationProperties.SetName(view,view.Mode switch{VisualizerMode.Spectrum=>"Canlı spectrum",VisualizerMode.VuMeter=>"Canlı VU metre",_=>"Canlı osiloskop"});
+  System.Windows.Automation.AutomationProperties.SetName(view,L.T(view.Mode switch{VisualizerMode.Spectrum=>"Canlı spectrum",VisualizerMode.VuMeter=>"Canlı VU metre",VisualizerMode.Spectrogram=>"Canlı spektrogram",_=>"Canlı osiloskop"}));
   view.ModeSelected?.Invoke(view,EventArgs.Empty);
  }
  void ResetAnalysis()
  {
   Array.Clear(spectrumBars);Array.Clear(spectrumPeaks);Array.Clear(spectrumHolds);Array.Clear(vuBars);Array.Clear(vuPeaks);Array.Clear(vuHolds);
   vuLevels[0]=vuLevels[1]=new(VuAnalysis.FloorDb,VuAnalysis.FloorDb);analysisStamp=0;
+  ResetSpectrogram();
  }
  static void HoldPeak(ref double peak,ref double hold,double value,double seconds,bool immediate)
  {
@@ -150,7 +151,8 @@ public sealed partial class OscilloscopeView
  {
   long now=Stopwatch.GetTimestamp();double seconds=analysisStamp==0?1.0/30:Math.Clamp((now-analysisStamp)/(double)Stopwatch.Frequency,0,.1);analysisStamp=now;
   if(count<2||capture==null){ResetAnalysis();return;}
-  if(Mode==VisualizerMode.Spectrum)
+  if(Mode==VisualizerMode.Spectrogram)UpdateSpectrogram();
+  else if(Mode==VisualizerMode.Spectrum)
   {
    if(spectrum?.SampleRate!=capture.SampleRate)spectrum=new SpectrumAnalysis(capture.SampleRate);
    var values=spectrum.Analyze(left.AsSpan(0,count),right.AsSpan(0,count),capture.Channels);

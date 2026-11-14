@@ -335,6 +335,9 @@
   "Visualizer kare hızı hedefi": "Visualizer target frame rate",
   "Osiloskop": "Oscilloscope",
   "VU metre": "VU meter",
+  "Spektrogram": "Spectrogram",
+  "Canlı spektrogram": "Live spectrogram",
+  "Sağ tıkla: Osiloskop, Spectrum, VU metre veya Spektrogram": "Right-click: Oscilloscope, Spectrum, VU meter or Spectrogram",
   "Çizgi kalınlığı": "Trace width",
   "Çizgi parıltısı": "Trace glow",
   "Buradaki seçenekler yalnızca görünümü değiştirir. Ses çıkışını, ReplayGain'i veya dosyaların çözümlemesini değiştirmez.": "These options affect appearance only. They do not change audio output, ReplayGain or decoding.",
@@ -598,5 +601,7 @@
   "Akış çubuğu": "Progress bar",
   "Kapağı büyüt": "Expand artwork",
   "Kapağı küçült": "Collapse artwork",
-  "Pencereyi boyutlandır": "Resize window"
+  "Pencereyi boyutlandır": "Resize window",
+  " silinmiş parça arşivden kaldırıldı.": " deleted tracks removed from the library.",
+  "Arşiv kontrol edilemedi: ": "Could not check library: "
 }

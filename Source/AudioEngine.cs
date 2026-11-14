@@ -201,12 +201,15 @@ public sealed class AudioEngine : IDisposable
  }
  internal static ScopeSource BufferAndObserve(IWaveProvider source,Action abort,out BufferedAudioSource buffer){buffer=new BufferedAudioSource(source,abort);return new ScopeSource(buffer);}
  public int CopyScope(ScopeCapture capture,Span<float> left,Span<float> right,int requestedFrames=0)
+  =>CopyScope(capture,left,right,out _,requestedFrames);
+ public int CopyScope(ScopeCapture capture,Span<float> left,Span<float> right,out long endFrame,int requestedFrames=0)
  {
+  endFrame=0;
   if(!ReferenceEquals(capture,Scope)||output==null)return 0;
   try
   {
    double seconds=output.GetPosition()/(double)output.OutputWaveFormat.AverageBytesPerSecond;
-   return capture.CopyWindow((long)(seconds*capture.SampleRate),left,right,requestedFrames);
+   return capture.CopyWindow((long)(seconds*capture.SampleRate),left,right,out endFrame,requestedFrames);
   }catch(System.Runtime.InteropServices.COMException){return 0;}catch(InvalidOperationException){return 0;}
  }
  public void Stop()

@@ -116,6 +116,7 @@ public partial class MainWindow : Window
  }
  async Task Scan(IEnumerable<string> roots)
  {
+  roots=roots.ToArray();
   scanCts=new();var token=scanCts.Token;UpdateLibraryScanState();var errors=new List<string>();int done=0,added=0;
   try
   {
@@ -125,6 +126,8 @@ public partial class MainWindow : Window
     try{var modified=File.GetLastWriteTimeUtc(path).Ticks;if(!path.EndsWith(".cue",StringComparison.OrdinalIgnoreCase)&&lookup.TryGetValue(path,out var old)&&old.Modified==modified)continue;var tracks=await Task.Run(()=>ReadLibraryFile(path,token),token);if(closed)return;ApplyImportedTracks(path,tracks);foreach(var track in tracks){lookup[track.Path]=track;if(track.IsCue)covered.Add(track.AudioPath);}added+=tracks.Count;if(added%12==0)RefreshView();}
     catch(OperationCanceledException){throw;}catch(Exception ex){errors.Add(path+": "+ex.Message);}
    }
+   await ReconcileLibraryAsync(roots,token);
+   token.ThrowIfCancellationRequested();
    Status.Text=L.T($"Tarama tamamlandı · {added} yeni/güncel parça · {errors.Count} uyarı");
   }catch(OperationCanceledException){if(!closed)Status.Text=L.T($"Tarama durduruldu · {added} parça kaydedildi.");}catch(Exception ex){if(!closed)Status.Text=L.T("Tarama hatası: ")+ex.Message;}
   finally{scanCts.Dispose();scanCts=null;if(!closed){if(errors.Count>0)File.WriteAllLines(System.IO.Path.Combine(Paths.Data,"scan-errors.txt"),errors);UpdateLibraryScanState();RefreshView();}}

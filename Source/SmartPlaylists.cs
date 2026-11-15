@@ -58,9 +58,11 @@ public partial class MainWindow
  void NewSmartPlaylist_Click(object sender,RoutedEventArgs e)=>EditSmartPlaylist(null);
  void EditSmartPlaylist(LocalPlaylist? existing)
  {
+  var draft=existing?.Copy()??new LocalPlaylist{Name="",SmartQuery="plays:0"};
   var owner=new Window{Title=existing==null?L.T("Akıllı çalma listesi oluştur"):L.T("Akıllı listeyi düzenle"),Owner=this,Width=620,Height=730,MinWidth=460,MinHeight=420,WindowStartupLocation=WindowStartupLocation.CenterOwner};owner.SetResourceReference(BackgroundProperty,"Canvas");owner.SetResourceReference(ForegroundProperty,"Ink");
-  var root=new DockPanel{Margin=new Thickness(28)};owner.Content=root;var stack=new StackPanel();root.Children.Add(new ScrollViewer{Content=stack,VerticalScrollBarVisibility=ScrollBarVisibility.Auto,HorizontalScrollBarVisibility=ScrollBarVisibility.Disabled});stack.Children.Add(new TextBlock{Text=L.T("Akıllı çalma listesi"),FontSize=25,FontWeight=FontWeights.Bold});
+  owner.DataContext=draft;var root=new DockPanel{Margin=new Thickness(28)};owner.Content=root;var stack=new StackPanel();root.Children.Add(new ScrollViewer{Content=stack,VerticalScrollBarVisibility=ScrollBarVisibility.Auto,HorizontalScrollBarVisibility=ScrollBarVisibility.Disabled});stack.Children.Add(new TextBlock{Text=L.T("Akıllı çalma listesi"),FontSize=25,FontWeight=FontWeights.Bold});
   stack.Children.Add(new TextBlock{Text=L.T("Koleksiyonun ve dinleme geçmişin değiştikçe liste kendini günceller."),TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,10,0,20)});
+  stack.Children.Add(BuildPlaylistCoverEditor(draft,owner));
   stack.Children.Add(new TextBlock{Text=L.T("Liste adı"),Margin=new Thickness(0,0,0,5)});var name=new TextBox{Text=existing?.Name??"",ToolTip=L.T("Liste adı"),Margin=new Thickness(0,0,0,14)};stack.Children.Add(name);
   stack.Children.Add(new TextBlock{Text=L.T("Hazır kural"),Margin=new Thickness(0,0,0,5)});
   var presets=new ComboBox{ItemsSource=SmartPresets.Skip(1),DisplayMemberPath="Name",ToolTip=L.T("Hazır kural seç")};stack.Children.Add(presets);
@@ -74,8 +76,8 @@ public partial class MainWindow
   query.TextChanged+=(_,_)=>Preview();name.TextChanged+=(_,_)=>Preview();presets.SelectionChanged+=(_,_)=>{if(presets.SelectedItem is SmartPreset p){query.Text=p.Query;sort.SelectedItem=sort.Items.Cast<SmartPreset>().First(x=>x.Sort==p.Sort);if(string.IsNullOrWhiteSpace(name.Text))name.Text=p.Name;}};Preview();
   save.Click+=(_,_)=>
   {
-   var item=existing??new LocalPlaylist();string oldName=item.Name,oldQuery=item.SmartQuery??"",oldSort=item.SmartSort;item.Name=name.Text.Trim();item.SmartQuery=query.Text.Trim();item.SmartSort=((SmartPreset)sort.SelectedItem).Sort;
-   if(existing==null)playlists.Items.Add(item);try{playlists.Save();playlistId=item.Id;view="playlist";Search.Text="";RefreshView();owner.DialogResult=true;}catch(Exception ex)when(ex is IOException or UnauthorizedAccessException){if(existing==null)playlists.Items.Remove(item);else{item.Name=oldName;item.SmartQuery=oldQuery;item.SmartSort=oldSort;}preview.Text=ex.Message;}
+   draft.Name=name.Text.Trim();draft.SmartQuery=query.Text.Trim();draft.SmartSort=((SmartPreset)sort.SelectedItem).Sort;
+   try{SavePlaylistDraft(draft,existing);playlistId=draft.Id;view="playlist";Search.Text="";RefreshView();owner.DialogResult=true;}catch(Exception ex)when(ex is IOException or UnauthorizedAccessException or NotSupportedException){preview.Text=L.T("Liste kaydedilemedi: ")+ex.Message;}
   };owner.ShowDialog();
  }
 }

@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace Ahenk;
@@ -13,10 +14,15 @@ public partial class MainWindow
  int lyricActive=-1;
  bool? lyricEmphasisFullscreen;
  bool lyricsStatusInPanel=true;
+ string lyricsTrackPath="";
  void ApplyLyricsPresentation()
  {
-  LyricsHeader.Visibility=Visible(!fullscreenPlayer);LyricsStatus.Visibility=Visible(!fullscreenPlayer&&lyricsStatusInPanel);LyricsFetch.Visibility=Visible(!fullscreenPlayer&&(lyricsDocument==null||LyricsService.IsOnline(lyricsDocument)));
-  LyricsPlain.Visibility=Visible(lyricTimeline.Count==0&&lyricsDocument!=null&&(!fullscreenPlayer||!lyricsDocument.Instrumental));
+  bool missing=lyricsDocument?.HasLyrics!=true;
+  LyricsHeader.Visibility=Visible(!fullscreenPlayer);LyricsStatus.Visibility=Visible(lyricsStatusInPanel&&(!fullscreenPlayer||missing));
+  LyricsFetch.Visibility=Visible(fullscreenPlayer?missing:lyricsDocument==null||LyricsService.IsOnline(lyricsDocument));
+  LyricsFetch.Content=fullscreenPlayer&&missing?L.T("Şarkı sözlerini bul"):LyricsService.IsOnline(lyricsDocument)?L.T("Yeniden ara"):L.T("İnternette bul");
+  LyricsFetch.HorizontalAlignment=fullscreenPlayer?HorizontalAlignment.Left:HorizontalAlignment.Stretch;
+  LyricsPlain.Visibility=Visible(lyricTimeline.Count==0&&lyricsDocument!=null);
   if(lyricEmphasisFullscreen!=fullscreenPlayer)
   {
    lyricEmphasisFullscreen=fullscreenPlayer;
@@ -32,6 +38,7 @@ public partial class MainWindow
  void CloseLyrics(){SmoothScroll.Cancel(LyricsScroll);lyricsCts?.Cancel();lyrics?.Dispose();}
  async void SelectLyricsTrack(Track track)
  {
+  lyricsTrackPath=track.Path;
   lyricsCts?.Cancel();lyricsCts?.Dispose();lyricsCts=new();var ct=lyricsCts.Token;long selection=++lyricsSelection;
   lyricsDocument=null;RenderLyrics(null);SetLyricsStatus(L.T("Yerel sözler kontrol ediliyor…"));LyricsFetch.IsEnabled=false;
   try
@@ -68,15 +75,40 @@ public partial class MainWindow
   LyricsPlain.Visibility=Visible(lyricTimeline.Count==0&&doc!=null);
   LyricsScroll.Visibility=Visible(lyricTimeline.Count>0);
   LyricsSyncBadge.Visibility=Visible(lyricTimeline.Count>0);
-  LyricsFetch.Visibility=Visible(doc==null||LyricsService.IsOnline(doc));LyricsFetch.Content=LyricsService.IsOnline(doc)?L.T("Yeniden ara"):L.T("İnternette bul");
   UpdateLyricsSettingsInfo();
   foreach(var line in lyricTimeline)
   {
-   var text=new TextBlock{Text=line.Text.Length>0?line.Text:"♪",TextWrapping=TextWrapping.Wrap,FontSize=17,Margin=new Thickness(0,7,0,7)};
+   var text=new TextBlock{Text=line.Text.Length>0?line.Text:"♪",TextWrapping=TextWrapping.Wrap,FontSize=17,Margin=new Thickness(0,7,0,7),Tag=line,Cursor=Cursors.Hand,Background=Brushes.Transparent,ToolTip=FormatTime(TimeSpan.FromSeconds(line.Seconds))};
+   text.MouseLeftButtonUp+=LyricLine_Click;
    text.SetResourceReference(TextBlock.FontSizeProperty,"UiLyricsFontSize");text.SetResourceReference(TextBlock.ForegroundProperty,"Muted");LyricsLines.Children.Add(text);lyricBlocks.Add(text);
   }
   ApplyLyricsPresentation();
-  LyricsScroll.ScrollToTop();UpdateLyricsVisibility();UpdateLyricsPlayback();
+  LyricsScroll.ScrollToTop();LyricsPlain.ScrollToVerticalOffset(0);LyricsPlain.ScrollToHorizontalOffset(0);UpdateLyricsVisibility();
+  if(fullscreenPlayer)UpdateFullscreenLayout();
+  UpdateLyricsPlayback();
+  // The new document is measured after the old viewport has been cleared.
+  // Reset again after layout so a shorter/plain document cannot retain the
+  // previous track's scroll position or fullscreen centering offset.
+  long selection=lyricsSelection;
+  Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded,()=>
+  {
+   if(closed||selection!=lyricsSelection)return;
+   LyricsScroll.ScrollToTop();LyricsPlain.ScrollToVerticalOffset(0);LyricsPlain.ScrollToHorizontalOffset(0);
+   if(fullscreenPlayer){UpdateFullscreenLayout();CenterFullscreenContent(false);}
+   lyricActive=-2;UpdateLyricsPlayback();
+  });
+ }
+ void LyricLine_Click(object sender,MouseButtonEventArgs e)
+ {
+  if(closed||dragging||sender is not TextBlock line)return;
+  // A gapless transition may have advanced before the next UI timer tick.
+  // Refresh first so a detached row can never seek the following track.
+  UpdateStreamTrack();
+  if(now==null||now.Path!=lyricsTrackPath||!lyricBlocks.Contains(line)||line.Tag is not LyricLine stamp||!double.IsFinite(stamp.Seconds)||stamp.Seconds<0||!(audio.IsPlaying||audio.IsPaused||resumePrepared))return;
+  double duration=PlayerDuration.TotalSeconds;if(!double.IsFinite(duration)||duration<=0)return;
+  Seek.Maximum=Math.Max(1,duration);Seek.Value=Math.Clamp(stamp.Seconds,0,duration);
+  CommitSeek();UpdateLyricsPlayback();Elapsed.Text=FormatTime(PlayerPosition);UpdateDesktopPlayback();UpdateMiniPlayer();
+  e.Handled=true;
  }
  void UpdateLyricsPlayback()
  {

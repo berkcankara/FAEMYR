@@ -34,7 +34,30 @@ public static class Themes
   void Set(string key,Color c){var b=new SolidColorBrush(c);b.Freeze();Application.Current.Resources[key]=b;}
   Color Custom(string key,Color fallback){if(Current=="oled"&&new[]{"Canvas","SidebarSurface","PanelSurface","PlayerSurface","CaptionSurface","Surface","ControlSurface","GlassSurface","HeaderSurface","LyricsSurface","UpNextSurface","AlbumTint","AlternateSurface"}.Contains(key))return key=="AlternateSurface"?Colors.Transparent:Colors.Black;if(!Appearance.Colors.TryGetValue(key,out string? text))return fallback;var color=(Color)ColorConverter.ConvertFromString(text);color.A=fallback.A;return color;}
   foreach(var item in baseColors)Set(item.Key,Custom(item.Key,item.Value));
+  // Resolve the player's translucent theme color once; all three workspace
+  // regions then share the same opaque color, without stacking transparency.
+  var playerColor=((SolidColorBrush)Application.Current.Resources["PlayerSurface"]).Color;
+  var canvasColor=((SolidColorBrush)Application.Current.Resources["Canvas"]).Color;
+  double playerAlpha=playerColor.A/255d;
+  byte WorkspaceChannel(byte player,byte canvas)=>(byte)Math.Round(player*playerAlpha+canvas*(1-playerAlpha));
+  Set("WorkspaceSurface",Color.FromRgb(WorkspaceChannel(playerColor.R,canvasColor.R),WorkspaceChannel(playerColor.G,canvasColor.G),WorkspaceChannel(playerColor.B,canvasColor.B)));
+  // Match the visible tone of the thin native caption icons without making
+  // the search outline depend on hover, focus, or the user's accent color.
+  var captionInk=((SolidColorBrush)Application.Current.Resources["Ink"]).Color;
+  var captionSurface=((SolidColorBrush)Application.Current.Resources["WorkspaceSurface"]).Color;
+  byte CaptionChannel(byte ink,byte surface)=>(byte)Math.Round(ink*.75+surface*.25);
+  Set("CaptionInk",Color.FromRgb(CaptionChannel(captionInk.R,captionSurface.R),CaptionChannel(captionInk.G,captionSurface.G),CaptionChannel(captionInk.B,captionSurface.B)));
+  Set("NavigationSurface",Current=="oled"?Color.FromRgb(22,22,22):((SolidColorBrush)Application.Current.Resources["ControlSurface"]).Color);
   Set("Accent",accent);Set("PlayingAccent",playing);Set("OnAccent",Custom("OnAccent",AppearancePreferences.ForegroundOn(accent)));
+  Color PanelFrame(string surfaceKey)
+  {
+   var surface=((SolidColorBrush)Application.Current.Resources[surfaceKey]).Color;
+   double Brightness(Color color)=>(.2126*color.R+.7152*color.G+.0722*color.B)/255;
+   // A white accent on a white card still needs a visible, softly fading rim.
+   return Math.Abs(Brightness(accent)-Brightness(surface))>=.25?accent:Brightness(surface)>.5?Color.FromRgb(72,72,72):Color.FromRgb(220,220,220);
+  }
+  Set("SidebarFrameAccent",PanelFrame("SidebarSurface"));Set("DetailFrameAccent",PanelFrame("PanelSurface"));
+  Set("PlayerFrameAccent",PanelFrame("Surface"));Set("ListFrameAccent",PanelFrame("GlassSurface"));
   foreach(string key in new[]{"VisualizerAccent","LyricsAccent","RatingAccent"})Set(key,Custom(key,accent));
   var canvas=Custom("GlassSurface",((SolidColorBrush)Application.Current.Resources["Canvas"]).Color);canvas.A=(byte)Math.Round(Appearance.ListOpacity*255/100);Set("GlassSurface",canvas);Application.Current.Resources["ListBlurRadius"]=Appearance.BlurRadius;
  }

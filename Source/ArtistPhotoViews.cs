@@ -47,14 +47,31 @@ public partial class MainWindow
  }
  async void LoadArtistPortrait(string name,string? fallback)
  {
-  int generation=++artistPhotoGeneration;ArtistPortrait.Path=fallback;ArtistPortrait.ToolTip=null;ArtistPhotoCredit.Visibility=Visibility.Collapsed;ArtistPhotoCredit.Tag=null;if(ArtistBackdrop.Effect is BlurEffect oldBlur)oldBlur.Radius=35;
+  int generation=++artistPhotoGeneration;ArtistPortrait.Path=fallback;ArtistPortrait.ToolTip=null;ArtistPhotoCredit.Visibility=Visibility.Collapsed;ArtistPhotoCredit.Tag=null;
+  SetArtistHeroPresentation(false);ArtistBackdrop.Effect=new BlurEffect{Radius=35};
   if(!ArtistPhotos.Allowed(name))return;
   try
   {
    var photo=await ArtistPhotos.Get(name,true);string? path=ArtistPhotos.Store.ImagePath(photo);if(closed||generation!=artistPhotoGeneration||view!="artist"||artistName!=name||!ArtistPhotos.Allowed(name)||path==null)return;
    var image=await ThumbnailCache.Load(path);if(closed||generation!=artistPhotoGeneration||view!="artist"||artistName!=name||image==null)return;
-   ArtistPortrait.Path=path;ArtistBackdrop.Source=image;if(ArtistBackdrop.Effect is BlurEffect blur)blur.Radius=12;ArtistPhotoCredit.Visibility=photo!.Local?Visibility.Collapsed:Visibility.Visible;ArtistPhotoCredit.Tag=photo.SourceUrl;ArtistPhotoCredit.ToolTip=photo.Credit;ArtistPortrait.ToolTip=photo.Credit;
+   bool rectangular=ArtistHeroArtwork.IsRectangular(image);
+   if(rectangular)
+   {
+    image=await ArtistHeroArtwork.LoadOriginal(path);
+    if(closed||generation!=artistPhotoGeneration||view!="artist"||artistName!=name||!ArtistPhotos.Allowed(name)||image==null)return;
+   }
+   SetArtistHeroPresentation(rectangular);ArtistPortrait.Path=rectangular?null:path;ArtistBackdrop.Source=image;ArtistPhotoCredit.Visibility=photo!.Local?Visibility.Collapsed:Visibility.Visible;ArtistPhotoCredit.Tag=photo.SourceUrl;ArtistPhotoCredit.ToolTip=photo.Credit;ArtistPortrait.ToolTip=photo.Credit;
   }catch(OperationCanceledException){}
+ }
+ void SetArtistHeroPresentation(bool rectangular)
+ {
+  artistHeroRectangular=rectangular;
+  ArtistPortraitFrame.Visibility=rectangular?Visibility.Collapsed:Visibility.Visible;
+  ArtistHeading.Margin=new Thickness(rectangular?30:198,26,30,26);
+  ArtistHeading.VerticalAlignment=rectangular?VerticalAlignment.Bottom:VerticalAlignment.Center;
+  ArtistKind.Visibility=ArtistSummary.Visibility=rectangular?Visibility.Collapsed:Visibility.Visible;
+  ArtistBackdrop.Opacity=rectangular?1:.45;ArtistBackdrop.Effect=rectangular?null:new BlurEffect{Radius=12};
+  UpdateArtistProfileLayout();
  }
  void ArtistPhotoCredit_Click(object sender,RoutedEventArgs e){if(ArtistPhotoCredit.Tag is string url)OpenPhotoSource(url);}
  static void OpenPhotoSource(string url){if(Uri.TryCreate(url,UriKind.Absolute,out var uri)&&uri.Scheme=="https"&&uri.Host=="commons.wikimedia.org")try{System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(uri.AbsoluteUri){UseShellExecute=true});}catch(System.ComponentModel.Win32Exception){}}

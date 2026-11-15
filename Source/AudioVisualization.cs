@@ -186,6 +186,7 @@ public sealed partial class OscilloscopeView
  void RenderSpectrum(DrawingContext drawing)
  {
   double height=Math.Max(2,ActualHeight-13),step=ActualWidth/SpectrumAnalysis.BandCount,width=Math.Max(1,step-2);
+  drawing.PushOpacityMask(PlotEdgeMask(0,ActualWidth));
   drawing.DrawLine(axis,new Point(0,height),new Point(ActualWidth,height));
   for(int i=0;i<SpectrumAnalysis.BandCount;i++)
   {
@@ -193,6 +194,7 @@ public sealed partial class OscilloscopeView
    if(h>.1)drawing.DrawRoundedRectangle(primary!.Brush,null,new Rect(x,height-h,width,h),Math.Min(2,width/2),2);
    if(spectrumPeaks[i]>.002){double y=height-spectrumPeaks[i]*(height-2);drawing.DrawLine(secondary,new Point(x,y),new Point(x+width,y));}
   }
+  drawing.Pop();
   double maximum=spectrum?.MaximumFrequency??20000;
   foreach(double hz in new double[]{20,100,1000,10000,20000})
   {
@@ -207,6 +209,7 @@ public sealed partial class OscilloscopeView
   for(int channel=0;channel<rows;channel++)
   {
    double y=(channel+.5)*plot/rows-5;Label(drawing,mono?"M":channel==0?"L":"R",0,y-1,9);
+   drawing.PushOpacityMask(PlotEdgeMask(start,width));
    int segments=Math.Clamp((int)(width/9),24,96);double step=width/segments;
    for(int segment=0;segment<segments;segment++)
    {
@@ -214,6 +217,7 @@ public sealed partial class OscilloscopeView
     drawing.DrawRoundedRectangle(segment/(double)segments<vuBars[channel]?primary!.Brush:axis!.Brush,null,rectangle,1,1);
    }
    if(vuPeaks[channel]>.002){double peak=start+width*vuPeaks[channel];drawing.DrawLine(primary,new Point(peak,y-2),new Point(peak,y+12));}
+   drawing.Pop();
    string db=vuLevels[channel].RmsDb<=VuAnalysis.FloorDb?"≤−60":vuLevels[channel].RmsDb.ToString("0.0",CultureInfo.InvariantCulture);
    Label(drawing,db,end+7,y-1,9,cached:false);
   }

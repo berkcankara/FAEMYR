@@ -185,9 +185,10 @@ public sealed partial class OscilloscopeView : FrameworkElement
   if(Mode==VisualizerMode.Spectrum){RenderSpectrum(drawing);return;}
   if(Mode==VisualizerMode.VuMeter){RenderVu(drawing);return;}
   if(Mode==VisualizerMode.Spectrogram){RenderSpectrogram(drawing);return;}
+  drawing.PushOpacityMask(PlotEdgeMask(0,ActualWidth));
   double middle=ActualHeight/2,amplitude=Math.Max(1,middle-4);
   drawing.DrawLine(axis,new Point(0,middle),new Point(ActualWidth,middle));
-  if(count<2||capture==null)return;
+  if(count<2||capture==null){drawing.Pop();return;}
   int length=Math.Min(count,capture.WindowFrames),start=ScopeCapture.TriggerStart(left.AsSpan(0,count),right.AsSpan(0,count),length);
   StreamGeometry Trace(float[] samples)
   {
@@ -215,6 +216,6 @@ public sealed partial class OscilloscopeView : FrameworkElement
   }
   var firstTrace=Trace(left);drawing.DrawGeometry(null,glow,firstTrace);
   if(capture.Channels>1)drawing.DrawGeometry(null,secondary,Trace(right));
-  drawing.DrawGeometry(null,primary,firstTrace);
+  drawing.DrawGeometry(null,primary,firstTrace);drawing.Pop();
  }
 }

@@ -12,7 +12,7 @@ using System.Windows.Media.Imaging;
 namespace Ahenk;
 public sealed class PanelPreferences
 {
- public double Width {get;set;}=340;
+ public double Width {get;set;}=364;
  public bool ShowCover {get;set;}=true;
  public bool ShowTitle {get;set;}=true;
  public bool ShowArtist {get;set;}=true;
@@ -24,7 +24,7 @@ public sealed class PanelPreferences
  public PanelPreferences Copy()=>new(){Width=Width,ShowCover=ShowCover,ShowTitle=ShowTitle,ShowArtist=ShowArtist,ShowLyrics=ShowLyrics,ShowTechnicalButton=ShowTechnicalButton,ShowAudioOutput=ShowAudioOutput,HiddenFields=new(HiddenFields,StringComparer.OrdinalIgnoreCase)};
  public static PanelPreferences Load(string path)
  {
-  try{var p=JsonSerializer.Deserialize<PanelPreferences>(File.ReadAllText(path))??new();p.HiddenFields=new(p.HiddenFields??[],StringComparer.OrdinalIgnoreCase);p.Width=double.IsFinite(p.Width)?Math.Clamp(p.Width,280,640):340;return p;}
+  try{var p=JsonSerializer.Deserialize<PanelPreferences>(File.ReadAllText(path))??new();p.HiddenFields=new(p.HiddenFields??[],StringComparer.OrdinalIgnoreCase);p.Width=double.IsFinite(p.Width)?Math.Clamp(p.Width,280,640):364;return p;}
   catch(Exception ex)when(ex is IOException or JsonException or UnauthorizedAccessException){return new();}
  }
  public void Save(string path)
@@ -61,7 +61,7 @@ public partial class MainWindow
  }
  void UpdatePanelScale()
  {
-  double maximum=Math.Clamp(ActualWidth-InterfaceSettings.Current.SidebarWidth-500,280,640);DetailsColumn.MaxWidth=maximum;
+  double maximum=Math.Clamp((ActualWidth>0?ActualWidth:Width)-InterfaceSettings.Current.SidebarWidth-500,280,640);DetailsColumn.MaxWidth=maximum;
   double width=DetailPanel.ActualWidth>0?DetailPanel.ActualWidth:panelPreferences.Width;
   double fontScale=InterfaceSettings.Current.FontScale/100*InterfaceSettings.Current.PanelTextScale/100;double scale=Math.Clamp((width-40)/300,.8,1.8);
   DetailTitle.FontSize=Math.Clamp(27*scale,23,40)*fontScale;DetailArtist.FontSize=Math.Clamp(14*Math.Sqrt(scale),13,19)*fontScale;
@@ -69,7 +69,7 @@ public partial class MainWindow
  }
  void SavePanelPreferences()
  {
-  if(InterfaceSettings.Current.ShowRightPanel)panelPreferences.Width=DetailsColumn.Width.IsAbsolute?Math.Clamp(DetailsColumn.Width.Value,280,DetailsColumn.MaxWidth):DetailsColumn.ActualWidth>0?Math.Clamp(DetailsColumn.ActualWidth,280,640):340;
+  if(InterfaceSettings.Current.ShowRightPanel&&!detailsSliding)panelPreferences.Width=DetailsColumn.Width.IsAbsolute?Math.Clamp(DetailsColumn.Width.Value,280,DetailsColumn.MaxWidth):DetailsColumn.ActualWidth>0?Math.Clamp(DetailsColumn.ActualWidth,280,640):340;
   try{panelPreferences.Save(PanelPreferencesPath);}catch(Exception ex)when(ex is IOException or UnauthorizedAccessException){Status.Text=L.T("Panel ayarları kaydedilemedi: ")+ex.Message;}
  }
  static Visibility Visible(bool v)=>v?Visibility.Visible:Visibility.Collapsed;
@@ -97,7 +97,7 @@ public partial class MainWindow
    if(File.Exists(coverPath))try{var image=new BitmapImage();image.BeginInit();image.CacheOption=BitmapCacheOption.OnLoad;image.DecodePixelWidth=720;image.UriSource=new Uri(coverPath);image.EndInit();image.Freeze();PanelCover.Background=new ImageBrush(image){Stretch=Stretch.UniformToFill};CoverFallback.Visibility=Visibility.Collapsed;}
    catch(Exception ex)when(ex is IOException or NotSupportedException or ArgumentException or FormatException){panelCoverPath="";}
   }
-  ApplyPanelVisibility();SelectLyricsTrack(t);if(fullscreenPlayer)UpdateFullscreenLayout();if(changed)DetailScroll.ScrollToTop();
+  ApplyPanelVisibility();SelectLyricsTrack(t);UpdateTopBarState();if(fullscreenPlayer)UpdateFullscreenLayout();if(changed)DetailScroll.ScrollToTop();
  }
  void CustomizePanel()=>OpenSettings("panel");
  SettingsSection BuildPanelSettings(Window dialog)
@@ -124,7 +124,7 @@ public partial class MainWindow
   void Commit()
   {
    var updated=new PanelPreferences{Width=resetWidth?340:Math.Clamp(DetailsColumn.ActualWidth,280,640),ShowCover=cover.IsChecked==true,ShowTitle=title.IsChecked==true,ShowArtist=artist.IsChecked==true,ShowLyrics=lyricOption.IsChecked==true,ShowTechnicalButton=technical.IsChecked==true,ShowAudioOutput=output.IsChecked==true,HiddenFields=new(choices.Where(c=>!c.Visible).Select(c=>c.Key),StringComparer.OrdinalIgnoreCase)};
-   updated.Save(PanelPreferencesPath);panelPreferences=updated;if(resetWidth)DetailsColumn.Width=new GridLength(340);ApplyPanelVisibility();
+   updated.Save(PanelPreferencesPath);panelPreferences=updated;if(resetWidth)DetailsColumn.Width=new GridLength(364);ApplyPanelVisibility();
   }
   return new(layout,Commit,()=>{panelPreferences=original;DetailsColumn.Width=originalWidth;ApplyPanelVisibility();},()=>true);
  }

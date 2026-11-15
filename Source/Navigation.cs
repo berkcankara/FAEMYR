@@ -10,8 +10,9 @@ public partial class MainWindow
    "queue"=>NavQueue,_=>NavAlbums};
   foreach(var button in new[]{NavAlbums,NavArtists,NavTracks,NavFavorites,NavPlaylists,NavQueue,NavSettings})
   {
-   button.SetResourceReference(Control.BackgroundProperty,button==active?"Accent":"ControlSurface");
+   button.SetResourceReference(Control.BackgroundProperty,button==active?"Accent":"NavigationSurface");
    button.SetResourceReference(Control.ForegroundProperty,button==active?"OnAccent":"Ink");
   }
+  UpdateTopBarState();
  }
 }

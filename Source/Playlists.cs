@@ -12,6 +12,7 @@ public sealed class LocalPlaylist
  public List<string> Tracks {get;set;}=[];
  public DateTime Created {get;set;}=DateTime.UtcNow;
  public string? SmartQuery{get;set;}public string SmartSort{get;set;}="library";
+ public LocalPlaylist Copy()=>new(){Id=Id,Name=Name,Description=Description,Cover=Cover,Color=Color,Tracks=Tracks.ToList(),Created=Created,SmartQuery=SmartQuery,SmartSort=SmartSort,SmartCount=SmartCount};
  [System.Text.Json.Serialization.JsonIgnore]public int SmartCount{get;set;}
  public string Detail=>SmartQuery!=null?L.T($"Akıllı liste · {SmartCount} parça"):L.T($"{Tracks.Count} parça");
  public string Initial=>string.IsNullOrWhiteSpace(Name)?"♪":Name.Trim()[..1].ToUpperInvariant();

@@ -12,7 +12,7 @@ public partial class MainWindow
  {
   Tracks.CanUserReorderColumns=true;Tracks.ColumnReordered+=(_,_)=>{if(applyingInterface)return;InterfaceSettings.Current.ColumnOrder=CustomizableColumns().OrderBy(x=>x.Column.DisplayIndex).Select(x=>x.Key).ToList();if(settingsWindow==null)try{InterfaceSettings.Current.Save(InterfaceSettings.Path);}catch(Exception ex)when(ex is IOException or UnauthorizedAccessException){Status.Text=ex.Message;}};
   AlbumArtwork.SizeChanged+=(_,_)=>UpdateArtworkClip();
-  ApplyInterfacePreferences(false);
+  InitializePlayerBoxAlignment();ApplyInterfacePreferences(false);
  }
  void ApplyInterfacePreferences(bool allowRefresh=true)
  {
@@ -20,13 +20,17 @@ public partial class MainWindow
   if(SidebarBorder==null)return;
   WindowRoot.ColumnDefinitions[0].Width=new GridLength(p.SidebarWidth);PlayerRow.Height=GridLength.Auto;PlayerRow.MinHeight=Math.Max(p.PlayerHeight,p.PlaySize+44+(p.ShowVolume?24:0));
   TransportControlsHost.RowDefinitions[0].Height=new GridLength(Math.Max(52,p.PlaySize+4));TransportControlsHost.RowDefinitions[1].Height=new GridLength(p.ShowVolume?24:0);
-  double sidePadding=Math.Clamp((p.SidebarWidth-156)/2,12,22);SidebarBorder.Padding=new Thickness(sidePadding,30,sidePadding,14);
+  double sidePadding=Math.Clamp((p.SidebarWidth-156)/2,12,22);SidebarBorder.Padding=new Thickness(Math.Max(4,sidePadding-8),22,Math.Max(4,sidePadding-8),14);
   MainContent.Margin=new Thickness(p.ContentPadding,p.ContentPadding-2,p.ContentPadding-4,Math.Max(10,p.ContentPadding-12));
   AlbumHero.Margin=new Thickness(-p.ContentPadding,-(p.ContentPadding-2),-(p.ContentPadding-4),0);ArtistHero.Margin=new Thickness(-p.ContentPadding,-(p.ContentPadding-2),-(p.ContentPadding-4),22);
   AmbientCover.Opacity=p.ArtworkOpacity/100;if(AmbientCover.Effect is BlurEffect effect)effect.Radius=p.ArtworkBlur;
-  DetailPanel.Visibility=DetailsSplitter.Visibility=Visible(p.ShowRightPanel);DetailsColumn.MinWidth=p.ShowRightPanel?280:0;DetailsColumn.Width=new GridLength(p.ShowRightPanel?Math.Clamp(p.RightPanelWidth??panelPreferences.Width,280,640):0);
-  double sideWidth=Math.Max(p.PlayerSideWidth,p.PlaySize+212);TransportColumn.Width=new GridLength(sideWidth);SignalColumn.Width=new GridLength(p.ShowSignal?sideWidth:0);SignalBox.Visibility=Visible(p.ShowSignal);
-  TransportBox.SetResourceReference(Border.BackgroundProperty,p.PlayerFrames?"Surface":"PlayerSurface");SignalBox.SetResourceReference(Border.BackgroundProperty,p.PlayerFrames?"Surface":"PlayerSurface");TransportBox.BorderThickness=SignalBox.BorderThickness=new Thickness(p.PlayerFrames?1:0);
+  ApplyDetailsPanelLayout(p.ShowRightPanel);
+  SignalBox.Visibility=Visible(p.ShowSignal);UpdatePlayerBoxAlignment();
+  foreach(var module in new[]{TransportBox,ScopeFrame,SignalBox})
+  {
+   module.SetResourceReference(Border.BackgroundProperty,p.PlayerFrames?"Surface":"PlayerSurface");
+   module.BorderThickness=new Thickness(p.PlayerFrames?.7:0);module.PlainPresentation=!p.PlayerFrames;
+  }
   VolumeControls.Visibility=Visible(p.ShowVolume);ShuffleButton.Visibility=Visible(p.ShowShuffle);RepeatButton.Visibility=Visible(p.ShowRepeat);
   Scope.Visibility=Visible(p.ShowVisualizer);Scope.MaximumFramesPerSecond=p.VisualizerFps;Scope.TraceWidth=p.TraceWidth;Scope.GlowOpacity=p.TraceGlow/100;Scope.Opacity=p.TraceOpacity/100;
   if(p.LyricsGlow)LyricsCard.SetResourceReference(InnerAccentBorder.GlowBrushProperty,"LyricsAccent");else LyricsCard.GlowBrush=Brushes.Transparent;
@@ -50,8 +54,12 @@ public partial class MainWindow
   Tracks.RowHeight=Math.Max(p.RowHeight,25*p.FontScale/100+10)+(hero?6:0);
   Tracks.SetResourceReference(DataGrid.AlternatingRowBackgroundProperty,p.AlternatingRows?"AlternateSurface":"Canvas");if(!p.AlternatingRows)Tracks.AlternatingRowBackground=Brushes.Transparent;
   TrackFavoriteColumn.Visibility=Visible(p.ShowTrackFavorites);NumberColumn.Visibility=Visible(p.ShowTrackNumbers);ArtistColumn.Visibility=Visible(p.ShowArtists&&(!hero||p.ArtistsInAlbums));FormatColumn.Visibility=Visible(p.ShowFormats);BitrateColumn.Visibility=Visible(p.ShowBitrate&&(hero||p.TechnicalColumnsEverywhere));WaveformColumn.Visibility=Visible(p.ShowWaveforms&&(hero||p.TechnicalColumnsEverywhere));DurationColumn.Visibility=Visible(p.ShowDurations);ArtistColumn.Width=p.ArtistColumnWidth;
-  TrackArea.Margin=collection?new Thickness(0):new Thickness(-p.ContentPadding,0,-(p.ContentPadding-4),-Math.Max(10,p.ContentPadding-12));
+  TrackArea.Margin=hero?new Thickness(8-p.ContentPadding,8,8-(p.ContentPadding-4),8-Math.Max(10,p.ContentPadding-12)):collection?new Thickness(0):new Thickness(-p.ContentPadding,0,-(p.ContentPadding-4),-Math.Max(10,p.ContentPadding-12));
+  TrackListFrame.Visibility=Tracks.Visibility;TrackListFrame.PlainPresentation=!hero;
+  TrackListFrame.BorderThickness=new Thickness(hero?.7:0);TrackListFrame.Padding=new Thickness(hero?8:0);
+  RoundedClip.SetRadius(TrackListViewport,hero?p.PanelRadius:0);
   PaletteLayer.Visibility=Visible(hero&&p.AlbumArtworkBackground);TrackGlass.Visibility=Visible(hero);AlbumQualityBadge.Visibility=Visible(view=="album"&&p.ShowAlbumQuality);
   if(NextTrackCard!=null&&now!=null){nextVisual="";UpdateNextTrack();}
+  UpdateArtistProfileLayout();UpdateCollectionHeaderLayout();
  }
 }

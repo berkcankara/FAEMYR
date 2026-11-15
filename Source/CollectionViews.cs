@@ -65,18 +65,12 @@ public partial class MainWindow
  }
  void EditPlaylist(LocalPlaylist? existing,Track? initial=null)
  {
-  var draft=new LocalPlaylist{Id=existing?.Id??Guid.NewGuid().ToString("N"),Name=existing?.Name??"",Description=existing?.Description??"",Cover=existing?.Cover??"",Color=existing?.Color??"#53504B",Tracks=existing?.Tracks.ToList()??[],Created=existing?.Created??DateTime.UtcNow};
+  var draft=existing?.Copy()??new LocalPlaylist{Name=""};
   var dialog=new Window{Title=existing==null?L.T("Çalma listesi oluştur"):L.T("Çalma listesini düzenle"),Owner=this,Width=550,Height=650,ResizeMode=ResizeMode.NoResize,WindowStartupLocation=WindowStartupLocation.CenterOwner};dialog.SetResourceReference(BackgroundProperty,"Canvas");dialog.SetResourceReference(ForegroundProperty,"Ink");
-  var root=new Grid{Margin=new Thickness(28)};root.RowDefinitions.Add(new(){Height=GridLength.Auto});root.RowDefinitions.Add(new(){Height=new GridLength(1,GridUnitType.Star)});root.RowDefinitions.Add(new(){Height=GridLength.Auto});dialog.Content=root;
+  dialog.DataContext=draft;var root=new Grid{Margin=new Thickness(28)};root.RowDefinitions.Add(new(){Height=GridLength.Auto});root.RowDefinitions.Add(new(){Height=new GridLength(1,GridUnitType.Star)});root.RowDefinitions.Add(new(){Height=GridLength.Auto});dialog.Content=root;
   root.Children.Add(new TextBlock{Text=dialog.Title,FontSize=25,FontWeight=FontWeights.Bold,Margin=new Thickness(0,0,0,20)});
   var content=new StackPanel();Grid.SetRow(content,1);root.Children.Add(content);
-  var coverRow=new StackPanel{Orientation=Orientation.Horizontal,Margin=new Thickness(0,0,0,20)};content.Children.Add(coverRow);
-  var preview=new Border{Width=150,Height=150,CornerRadius=new CornerRadius(14)};var letter=new TextBlock{Text="♪",FontSize=62,VerticalAlignment=VerticalAlignment.Center,HorizontalAlignment=HorizontalAlignment.Center,Foreground=Brushes.White};preview.Child=letter;coverRow.Children.Add(preview);
-  void Preview(){var image=CoverImage(draft.Cover,400);preview.Background=image!=null?new ImageBrush(image){Stretch=Stretch.UniformToFill}:new SolidColorBrush((Color)ColorConverter.ConvertFromString(draft.Color));letter.Visibility=image==null?Visibility.Visible:Visibility.Collapsed;}Preview();
-  var coverTools=new StackPanel{Margin=new Thickness(20,18,0,0)};coverRow.Children.Add(coverTools);
-  var choose=new Button{Content=L.T("Kapak seç…"),Margin=new Thickness(0,0,0,10)};coverTools.Children.Add(choose);choose.Click+=(_,_)=>{var picker=new OpenFileDialog{Title=L.T("Çalma listesi kapağı seç"),Filter=L.T("Görseller|*.jpg;*.jpeg;*.png;*.bmp")};if(picker.ShowDialog(dialog)==true){if(CoverImage(picker.FileName)==null){MessageBox.Show(dialog,L.T("Bu görsel açılamadı."),"Lyra");return;}draft.Cover=picker.FileName;Preview();}};
-  var clear=new Button{Content=L.T("Renk kullan"),Margin=new Thickness(0,0,0,10)};coverTools.Children.Add(clear);clear.Click+=(_,_)=>{draft.Cover="";Preview();};
-  var colors=new StackPanel{Orientation=Orientation.Horizontal};coverTools.Children.Add(colors);foreach(string color in new[]{"#53504B","#65517D","#335E56","#8B4C3C","#526183"}){var b=new Button{Width=25,Height=25,Padding=new Thickness(0),Margin=new Thickness(0,0,6,0),Background=new SolidColorBrush((Color)ColorConverter.ConvertFromString(color)),ToolTip=color};b.Click+=(_,_)=>{draft.Color=color;draft.Cover="";Preview();};colors.Children.Add(b);}
+  content.Children.Add(BuildPlaylistCoverEditor(draft,dialog));
   content.Children.Add(new TextBlock{Text=L.T("Liste adı"),Margin=new Thickness(0,0,0,7)});var name=new TextBox{Text=draft.Name,MaxLength=100,Margin=new Thickness(0,0,0,18)};System.Windows.Automation.AutomationProperties.SetName(name,L.T("Liste adı"));content.Children.Add(name);
   content.Children.Add(new TextBlock{Text=L.T("Açıklama"),Margin=new Thickness(0,0,0,7)});var description=new TextBox{Text=draft.Description,MaxLength=1000,Height=95,AcceptsReturn=true,TextWrapping=TextWrapping.Wrap,VerticalScrollBarVisibility=ScrollBarVisibility.Auto};content.Children.Add(description);
   var hint=new TextBlock{Text=L.T("Parçalara sağ tıklayıp “Çalma listesine ekle” menüsünü kullanabilirsin."),TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,18,0,0),FontSize=12};hint.SetResourceReference(TextBlock.ForegroundProperty,"Muted");content.Children.Add(hint);
@@ -84,10 +78,8 @@ public partial class MainWindow
   save.Click+=(_,_)=>{
    if(string.IsNullOrWhiteSpace(name.Text)){name.Focus();return;}draft.Name=name.Text.Trim();draft.Description=description.Text.Trim();
    try{
-    if(File.Exists(draft.Cover)&&draft.Cover!=existing?.Cover){draft.Cover=PlaylistArtwork.Import(draft.Cover,Paths.Data,draft.Id);}
     if(initial!=null&&!draft.Tracks.Contains(initial.Path,StringComparer.OrdinalIgnoreCase))draft.Tracks.Add(initial.Path);
-    int index=existing==null?-1:playlists.Items.IndexOf(existing);if(index<0)playlists.Items.Add(draft);else playlists.Items[index]=draft;
-    try{playlists.Save();}catch{if(index<0)playlists.Items.Remove(draft);else playlists.Items[index]=existing!;throw;}
+    SavePlaylistDraft(draft,existing);
     playlistId=draft.Id;view="playlist";Search.Text="";RefreshView();dialog.DialogResult=true;
    }catch(Exception ex)when(ex is IOException or UnauthorizedAccessException or NotSupportedException){MessageBox.Show(dialog,L.T("Liste kaydedilemedi: ")+ex.Message,"Lyra");}
   };
@@ -98,6 +90,7 @@ public partial class MainWindow
   var tracks=songs.ToList();ArtistName.Text=artistName;ArtistSummary.Text=L.T($"{tracks.Select(t=>t.AlbumKey).Distinct().Count()} albüm · {tracks.Count} parça");
   var image=CoverImage(tracks.Select(t=>t.Cover).FirstOrDefault(File.Exists));ArtistBackdrop.Source=image;ArtistBackdrop.Opacity=.45;
   LoadArtistPortrait(artistName,tracks.Select(t=>t.Cover).FirstOrDefault(File.Exists));
+  LoadArtistBiography(artistName);
  }
  void RenderPlaylist()
  {

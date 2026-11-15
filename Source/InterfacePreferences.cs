@@ -12,7 +12,7 @@ public sealed class InterfacePreferences
  public double AlbumTitleSize{get;set;}=52;
  public double LyricsFontSize{get;set;}=17;
  public double PanelTextScale{get;set;}=100;
- public double SidebarWidth{get;set;}=200;
+ public double SidebarWidth{get;set;}=224;
  public double NavigationHeight{get;set;}=42;
  public double NavigationGap{get;set;}=8;
  public double ContentPadding{get;set;}=30;
@@ -79,7 +79,7 @@ public sealed class InterfacePreferences
   FontFamily=string.IsNullOrWhiteSpace(FontFamily)||FontFamily.Length>160?"Segoe UI":FontFamily.Trim();
   if(FontFamily.IndexOfAny(['/', '\\', ':', '#'])>=0)FontFamily="Segoe UI";
   FontScale=Bound(FontScale,85,125,100);PageTitleSize=Bound(PageTitleSize,24,44,32);AlbumTitleSize=Bound(AlbumTitleSize,30,72,52);LyricsFontSize=Bound(LyricsFontSize,13,28,17);PanelTextScale=Bound(PanelTextScale,85,135,100);
-  SidebarWidth=Bound(SidebarWidth,180,260,200);NavigationHeight=Bound(NavigationHeight,36,56,42);NavigationGap=Bound(NavigationGap,4,14,8);ContentPadding=Bound(ContentPadding,16,42,30);AlbumColumns=Math.Clamp(AlbumColumns,3,8);ArtistColumns=Math.Clamp(ArtistColumns,3,8);PlaylistColumns=Math.Clamp(PlaylistColumns,2,6);
+  SidebarWidth=Bound(SidebarWidth,180,260,224);NavigationHeight=Bound(NavigationHeight,36,56,42);NavigationGap=Bound(NavigationGap,4,14,8);ContentPadding=Bound(ContentPadding,16,42,30);AlbumColumns=Math.Clamp(AlbumColumns,3,8);ArtistColumns=Math.Clamp(ArtistColumns,3,8);PlaylistColumns=Math.Clamp(PlaylistColumns,2,6);
   CardGap=Bound(CardGap,2,20,8);CardRadius=Bound(CardRadius,0,32,12);ButtonRadius=Bound(ButtonRadius,0,24,8);PanelRadius=Bound(PanelRadius,0,32,14);CoverMaximum=Bound(CoverMaximum,220,360,286);RowHeight=Bound(RowHeight,38,82,54);
   if(RightPanelWidth.HasValue)RightPanelWidth=double.IsFinite(RightPanelWidth.Value)?Math.Clamp(RightPanelWidth.Value,280,640):null;
   ColumnOrder=(ColumnOrder??[]).Where(k=>new[]{"favorite","number","title","artist","format","bitrate","waveform","duration"}.Contains(k)).Distinct().ToList();HiddenNavigation=new((HiddenNavigation??[]).Where(k=>new[]{"albums","artists","tracks","favorites","playlists","queue"}.Contains(k)));WaveformMaximum=Bound(WaveformMaximum,100,260,176);ArtistColumnWidth=Bound(ArtistColumnWidth,100,260,150);
@@ -103,7 +103,7 @@ public static class InterfaceSettings
   var p=Current;p.Validate();var r=Application.Current.Resources;
   r["UiFontFamily"]=new FontFamily(p.FontFamily);for(int size=8;size<=72;size++)r["UiFont"+size]=size*p.FontScale/100;
   r["UiPageTitleSize"]=p.PageTitleSize*p.FontScale/100;r["UiAlbumTitleSize"]=p.AlbumTitleSize*p.FontScale/100;r["UiLyricsFontSize"]=p.LyricsFontSize*p.FontScale/100;r["UiPlainLyricsFontSize"]=(p.LyricsFontSize-1)*p.FontScale/100;
-  r["UiButtonRadius"]=new CornerRadius(p.ButtonRadius);r["UiCardRadius"]=new CornerRadius(p.CardRadius);r["UiCardRadiusValue"]=p.CardRadius;r["UiPanelRadius"]=new CornerRadius(p.PanelRadius);r["UiPlayRadius"]=new CornerRadius(p.PlaySize/2*p.PlayRoundness/100);
+  r["UiButtonRadius"]=new CornerRadius(p.ButtonRadius);r["UiCardRadius"]=new CornerRadius(p.CardRadius);r["UiCardRadiusValue"]=p.CardRadius;r["UiPanelRadius"]=new CornerRadius(p.PanelRadius);r["UiPanelRadiusValue"]=p.PanelRadius;r["UiPlayRadius"]=new CornerRadius(p.PlaySize/2*p.PlayRoundness/100);
   r["UiArtistRadius"]=new CornerRadius(p.CircularArtists?10000:p.CardRadius);r["UiArtistRadiusValue"]=p.CircularArtists?10000d:p.CardRadius;r["UiNavigationHeight"]=p.NavigationHeight;r["UiNavigationMargin"]=new Thickness(0,0,0,p.NavigationGap);
   r["UiPlaySize"]=p.PlaySize;r["UiAlbumButtonHeight"]=p.AlbumButtonHeight;r["UiAlbumColumns"]=p.AlbumColumns;r["UiArtistColumns"]=p.ArtistColumns;r["UiPlaylistColumns"]=p.PlaylistColumns;
   r["UiCardMargin"]=new Thickness(p.CardGap,0,p.CardGap,p.CardGap+14);r["UiCardDetails"]=p.ShowCardDetails?Visibility.Visible:Visibility.Collapsed;r["UiScrollbarWidth"]=p.ScrollbarWidth;

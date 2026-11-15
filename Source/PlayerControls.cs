@@ -44,7 +44,7 @@ public partial class MainWindow
   if(node is ScrollViewer viewer)return viewer;if(node==null)return null;
   for(int i=0;i<VisualTreeHelper.GetChildrenCount(node);i++)if(FindScroll(VisualTreeHelper.GetChild(node,i)) is {} child)return child;return null;
  }
- ScrollViewer? CurrentScroll()=>FindScroll(view switch{"albums" or "artist"=>Albums,"artists"=>Artists,"playlists"=>PlaylistCards,"favorites" when favoritesTab=="albums"=>Albums,_=>Tracks});
+ ScrollViewer? CurrentScroll()=>view=="artist"?ArtistProfileScroll:FindScroll(view switch{"albums"=>Albums,"artists"=>Artists,"playlists"=>PlaylistCards,"favorites" when favoritesTab=="albums"=>Albums,_=>Tracks});
  PlayerSession CaptureSession()
  {
   var scroll=CurrentScroll();return new(){Queue=queue.Select(t=>t.Path).ToList(),QueueIndex=queueIndex,TrackPath=now?.Path,Seconds=PlayerPosition.TotalSeconds,View=view,AlbumKey=albumKey,ArtistName=artistName,PlaylistId=playlistId,Search=Search.Text,FavoritesTab=favoritesTab,SelectedPath=(Tracks.SelectedItem as Track)?.Path,ScrollOffset=scroll?.VerticalOffset??0,HorizontalOffset=scroll?.HorizontalOffset??0,PanelOffset=DetailScroll.VerticalOffset,Shuffle=order.Shuffle,Repeat=order.Repeat,Order=order.Capture(),SmartViewIndex=SmartView.SelectedIndex};

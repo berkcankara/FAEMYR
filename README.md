@@ -1,21 +1,38 @@
 # Lyra
 
-Windows için yerel müzik arşivi oynatıcısı. Mevcut sürüm: **0.10.5**.
+Windows için yerel müzik arşivi oynatıcısı. Mevcut sürüm: **0.10.39**.
 
-Lyra kendi bilgisayarındaki müzik dosyalarını çalar. Arşiv taraması, kapaklar ve görselleştirme yerel olarak çalışır. İsteğe bağlı şarkı sözü ve sanatçı fotoğrafı aramaları internet bağlantısı kullanır. Türkçe ve İngilizce arayüz bulunur.
+Windows medya paneliyle bütünleşir: parça adı, sanatçı, albüm kapağı ve oynatma kontrolleri Windows'a iletilir. Kilit ekranındaki görünürlük Windows sürümüne ve sistem ayarlarına bağlıdır. Medya tuşlarının hangi uygulamaya yönleneceğini Windows yönetir. Windows 10 sürüm 1809 veya üzeri gerekir.
+
+Üst çubukta geri düğmesi, üzerine gelindiğinde veya tıklandığında genişleyen arama ve sağ paneli açma/kapatma düğmesi bulunur. Sağ panel gizliyken çalan parçanın adı ve sanatçısı çubuğun ortasında görünür. Saydam üst çubuk, albüm veya çalma listesi arka planını kesintisiz gösterir.
+
+Lyra kendi bilgisayarındaki müzik dosyalarını çalar. Arşiv taraması, kapaklar ve görselleştirme yerel olarak çalışır. Çevrimiçi şarkı sözü, sanatçı fotoğrafı ve Wikipedia özeti aramaları internet bağlantısı kullanır. Türkçe ve İngilizce arayüz bulunur.
 
 ## Özellikler
 
 - Albüm ve sanatçı görünümleri, arama, çalma kuyruğu ve çalma listeleri.
+- Sanatçı profillerinde arayüz diline uygun Wikipedia özeti, kaynak bağlantısı ve çevrimdışı önbellek.
 - Favoriler, beş yıldızlı puanlama ve arşiv filtreleri.
 - FLAC, WavPack ve diğer desteklenen ses biçimleri; ayrıntılı etiket/teknik bilgi görünümü.
 - Ses aygıtı seçimi, WASAPI paylaşımlı/özel çıkış seçenekleri ve ReplayGain.
 - Osiloskop, spektrum, VU metre ve canlı spektrogram.
-- Yerel veya isteğe bağlı çevrimiçi şarkı sözleri; mevcutsa zamanlı söz takibi.
+- Yerel veya isteğe bağlı çevrimiçi şarkı sözleri; mevcutsa zamanlı söz takibi ve satıra tıklayarak o zamana atlama.
 - Tam ekran ve mini oynatıcı, multimedya tuşları, görev çubuğu kontrolleri.
 - Özelleştirilebilir arayüz, tema ve OLED siyah tema.
 
-## Windows sürümünü çalıştırma
+## Windows sürümünü kurma
+
+1. [Sürümler](https://github.com/berkcankara/LYRA-Lossless-Music-Player/releases) sayfasından `Windows-x64-Setup.exe` ile biten dosyayı indir ve aç.
+2. Kurulum klasörünü seç.
+3. Başlat menüsü ve masaüstü kısayolu seçeneklerini belirle; ikisi de başlangıçta işaretlidir.
+4. Kurulumu tamamla ve Lyra'yı aç.
+5. **Ayarlar → Müzik arşivi → Klasör ekle** yolundan müzik klasörünü seç.
+
+Kurulum varsayılan olarak kendi kullanıcı hesabındaki `AppData\Local\Programs\Lyra` klasörüne yapılır ve yönetici izni istemez. Başka bir konum seçersen hesabının o klasöre yazabilmesi gerekir. Ayrı .NET kurulumu gerekmez. Güncellemeler ve kaldırma işlemi uygulamanın oluşturduğu `data` klasörünü korur. Portable sürümden geçerken Lyra kapalıyken mevcut `data` klasörünü yeni Lyra klasörüne kopyalayabilirsin.
+
+Depo gizliyse indirme bağlantılarına yalnızca depoya erişimi olan GitHub hesapları ulaşabilir.
+
+## Kurulumsuz kullanım
 
 1. Windows x64 Portable ZIP paketini indir.
 2. ZIP'e sağ tıklayıp **Tümünü ayıkla** seçeneğini kullan.
@@ -35,6 +52,14 @@ Windows üzerinde .NET 8 SDK ve PowerShell gerekir:
 ```
 
 Çıktı `App` klasörüne yazılır. Projenin eski dosya adı `Source/Ahenk.csproj` ve iç ad alanı `Ahenk` olarak korunur; oluşturulan uygulamanın adı `Lyra`dır.
+
+Kurulum EXE'sini ve Portable ZIP'i hazırlamak için Inno Setup 7 derleyicisiyle:
+
+```powershell
+./Installer/build-installer.ps1 -CompilerPath 'C:\Program Files\Inno Setup 7\ISCC.exe'
+```
+
+Paketler `.artifacts` klasörüne yazılır. Derleme yalnızca uygulama dosyalarını alır; kişisel `data` klasörü, arşiv veritabanları ve hata ayıklama dosyaları pakete eklenmez. Güncelleme notları [CHANGELOG.md](CHANGELOG.md) dosyasındadır.
 
 Çalışma sırasında kullanılan ayrı komut satırı araçları `App/tools` içinde olmalıdır:
 

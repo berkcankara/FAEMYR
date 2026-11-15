@@ -86,8 +86,10 @@ public sealed partial class OscilloscopeView
   UpdateSpectrogramBitmap();
   double left=ActualWidth>=200?28:0,height=Math.Max(2,ActualHeight-13),width=Math.Max(2,ActualWidth-left);
   RenderOptions.SetBitmapScalingMode(this,BitmapScalingMode.Linear);
+  drawing.PushOpacityMask(PlotEdgeMask(left,width));
   drawing.DrawImage(spectrogramBitmap,new Rect(left,0,width,height));
   drawing.DrawLine(axis,new Point(left,height),new Point(ActualWidth,height));
+  drawing.Pop();
   double maximum=spectrogramAnalysis?.MaximumFrequency??20000;
   if(left>0)foreach(double hz in height>=65?new double[]{20,100,1000,20000}:new double[]{20,20000})
   {

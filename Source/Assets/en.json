@@ -140,6 +140,7 @@
   "Albüme sağ tıklayıp Favorile seçeneğini kullanarak veya albümü açıp kalp düğmesiyle buraya ekleyebilirsin.": "Right-click an album to favorite it, or use the heart on the album page.",
   "Koleksiyonundaki sanatçılar": "Artists in your library",
   "Müzik arşivin": "Your music library",
+  "Albümlerin": "Your albums",
   "Müzik arşivi": "Music library",
   "Müzik klasörünü seç": "Choose music folder",
   "Müzik arşivinin klasörünü seç": "Choose your music library folder",
@@ -603,5 +604,15 @@
   "Kapağı küçült": "Collapse artwork",
   "Pencereyi boyutlandır": "Resize window",
   " silinmiş parça arşivden kaldırıldı.": " deleted tracks removed from the library.",
-  "Arşiv kontrol edilemedi: ": "Could not check library: "
+  "Arşiv kontrol edilemedi: ": "Could not check library: ",
+  "Sanatçı hakkında": "About the artist",
+  "Wikipedia bilgileri yükleniyor…": "Loading information from Wikipedia…",
+  "Wikipedia'da oku ↗": "Read on Wikipedia ↗",
+  "Bu sanatçı için seçili dilde Wikipedia özeti bulunamadı.": "No Wikipedia summary is available for this artist in the selected language.",
+  "Wikipedia'ya şu anda ulaşılamıyor. Profili yeniden açarak tekrar deneyebilirsin.": "Wikipedia is unavailable right now. Reopen the profile to try again.",
+  "Geri": "Back",
+  "Sağ paneli gizle": "Hide right panel",
+  "Sağ paneli göster": "Show right panel",
+  "Bul": "Find",
+  "Şarkı sözlerini bul": "Find lyrics"
 }

@@ -24,13 +24,13 @@ public partial class MainWindow : Window
  {
   InterfaceSettings.Load();InitializeComponent();Scope.Engine=audio;StartupMetrics.Mark("xaml");AddHandler(ArtistLinks.ArtistRequestedEvent,new RoutedEventHandler(ArtistLinkRequested));InitializeWindowFrame();
   waveforms=new WaveformQueue(System.IO.Path.Combine(Paths.Data,"waveforms"),(t,data,error)=>{if(closed)return;Dispatcher.BeginInvoke(DispatcherPriority.Background,()=>{if(closed||!library.Contains(t))return;t.Waveform=data;t.WaveformStatus=data!=null?L.T("Yerel analiz · krem: bas / turuncu: orta / mavi: tiz"):error;});});
-  InitializeDetailPanel();InitializeLyrics();InitializeAlbumSort();InitializeCollections();InitializeArtistPhotos();InitializeThemes();InitializeVisualizer();InitializeFavorites();InitializeListening();InitializeQueueManagement();InitializeSmartLists();
+  InitializeDetailPanel();InitializeLyrics();InitializeAlbumSort();InitializeCollections();InitializeArtistPhotos();InitializeArtistProfile();InitializeThemes();InitializeVisualizer();InitializeFavorites();InitializeListening();InitializeQueueManagement();InitializeSmartLists();
   DeviceChoice.ItemsSource=new[]{new DeviceOption(null,L.T("Windows varsayılan aygıtı"))};DeviceChoice.SelectedIndex=0;InitializeAudioFeatures();InitializePlayerControls();InitializeDesktopPlayback();InitializeDesktopPlayers();InitializeFullscreenPlayer();InitializeInterfaceCustomization();
-  WindowRoot.IsEnabled=false;EmptyState.Visibility=Visibility.Collapsed;LibraryStats.Text=L.T("Arşivin hazırlanıyor…");Loaded+=LoadLibrary;
+  InitializeTopBar();WindowRoot.IsEnabled=false;EmptyState.Visibility=Visibility.Collapsed;LibraryStats.Text=L.T("Arşivin hazırlanıyor…");Loaded+=LoadLibrary;
   audio.Ended+=()=>Dispatcher.BeginInvoke(async ()=>{UpdateStreamTrack();await Advance(true);});
   audio.Failed+=message=>Dispatcher.BeginInvoke(()=>{resumePrepared=now!=null;resumeSeconds=audio.LastFailurePosition.TotalSeconds;Scope.Reset();SetSignal(message);Status.Text=message;});
   timer.Tick+=(_,_)=>{UpdateStreamTrack();UpdateListening();SyncPlaybackVisuals();UpdateDesktopPlayback();UpdateNextTrack();UpdateLyricsPlayback();UpdateVolumeControls();UpdateFullscreenAmbience();UpdateMiniPlayer();NotifyTrackChange();Scope.Running=IsVisible&&(!fullscreenPlayer||!fullscreenControlsIdle.Hidden)&&InterfaceSettings.Current.ShowVisualizer&&audio.IsPlaying&&audio.Scope!=null&&WindowState!=WindowState.Minimized;if(!dragging){Seek.Maximum=Math.Max(1,PlayerDuration.TotalSeconds);Seek.Value=PlayerPosition.TotalSeconds;}Elapsed.Text=FormatTime(PlayerPosition);TotalTime.Text=FormatTime(PlayerDuration);PlayIcon.Icon=audio.IsPlaying?"pause":"play";};timer.Start();
-  order.Reset(queue.Count,queueIndex);TrackArea.SizeChanged+=(_,_)=>{UpdateHeroLayout();UpdateGlassBackdrop();};SizeChanged+=(_,_)=>{UpdateHeroLayout();UpdateGlassBackdrop();};
+  order.Reset(queue.Count,queueIndex);TrackArea.SizeChanged+=(_,_)=>{UpdateHeroLayout();UpdateGlassBackdrop();};TrackGlass.SizeChanged+=(_,_)=>UpdateGlassBackdrop();SizeChanged+=(_,_)=>{UpdateHeroLayout();UpdateGlassBackdrop();};
   Closing+=(_,_)=>{deviceMonitor.Stop();SaveListening();ClosePlayerControls();closed=true;gainScan?.Cancel();CloseLyrics();SavePanelPreferences();StopFolderWatching();waveforms?.Dispose();bitrates?.Dispose();searchDelay.Stop();scanCts?.Cancel();playCts?.Cancel();timer.Stop();Scope.Reset();audio.Dispose();if(libraryReady)try{File.WriteAllText(System.IO.Path.Combine(Paths.Data,"queue.json"),JsonSerializer.Serialize(queue.Select(t=>t.Path)));}catch(Exception ex)when(ex is IOException or UnauthorizedAccessException){} _=Task.Run(()=>AudioEngine.TrimCache(cache));store?.Dispose();};
   ContentRendered+=(_,_)=>StartupMetrics.Mark("firstRender");StartupMetrics.Mark("constructorComplete");
  }
@@ -44,12 +44,12 @@ public partial class MainWindow : Window
  }
  void UpdateGlassBackdrop()
  {
-  if((view!="album"&&view!="playlist")||TrackArea.ActualWidth<=0||TrackArea.ActualHeight<=0)return;
-  var origin=TrackArea.TranslatePoint(new Point(),PaletteLayer);GlassBackdrop.Fill=new VisualBrush(PaletteLayer){ViewboxUnits=BrushMappingMode.Absolute,Viewbox=new Rect(origin,new Size(TrackArea.ActualWidth,TrackArea.ActualHeight)),Stretch=Stretch.Fill};
+  if((view!="album"&&view!="playlist")||TrackGlass.ActualWidth<=0||TrackGlass.ActualHeight<=0)return;
+  var origin=TrackGlass.TranslatePoint(new Point(),PaletteLayer);GlassBackdrop.Fill=new VisualBrush(PaletteLayer){ViewboxUnits=BrushMappingMode.Absolute,Viewbox=new Rect(origin,new Size(TrackGlass.ActualWidth,TrackGlass.ActualHeight)),Stretch=Stretch.Fill};
  }
  void RefreshView()
  {
-  if(Tracks==null||playlists==null||!libraryReady)return;UpdateNavigation();UpdateSearchPrompt();string query=Search.Text.Trim();IEnumerable<Track> filtered=library;
+  if(Tracks==null||playlists==null||!libraryReady)return;RecordNavigation();UpdateNavigation();UpdateSearchPrompt();string query=Search.Text.Trim();IEnumerable<Track> filtered=library;
   var queryMatch=TrackQuery.Compile(query,listening,out string queryError);filtered=filtered.Where(queryMatch);SmartFilterError.Text=queryError;SmartFilterError.Visibility=Visible(queryError.Length>0);
   var list=filtered.ToList();bool favoriteAlbums=view=="favorites"&&favoritesTab=="albums",favoriteTracks=view=="favorites"&&!favoriteAlbums;bool gallery=view is "albums" or "artist"||favoriteAlbums,collection=view is "albums" or "artists" or "artist" or "playlists"||favoriteAlbums,hero=view is "album" or "playlist",profile=view=="artist";
   LibraryStats.Text=L.T($"{library.Count:N0} parça · {library.Select(t=>t.AlbumKey).Distinct().Count():N0} albüm · {TimeSpan.FromSeconds(library.Sum(t=>t.Seconds)).TotalHours:0.#} saat müzik");
@@ -63,7 +63,7 @@ public partial class MainWindow : Window
   if(view=="album")RenderAlbum();else if(view=="playlist")RenderPlaylist();
   if(hero){Dispatcher.BeginInvoke(DispatcherPriority.Loaded,()=>{UpdateHeroLayout();UpdateGlassBackdrop();});}
   SyncPlaybackVisuals(true);
-  if(gallery){var artistAlbums=profile?ArtistCatalog.AlbumKeys(library,artistName):null;var source=profile?list.Where(t=>artistAlbums!.Contains(t.AlbumKey)):list;if(favoriteAlbums)source=source.Where(t=>favorites.IsAlbumFavorite(t.AlbumKey));var cards=AlbumSorting.Sort(AlbumCards(source),albumSortSettings.Mode);Albums.ItemsSource=cards.Chunk(InterfaceSettings.Current.AlbumColumns).ToArray();PageTitle.Text=favoriteAlbums?L.T("Favoriler"):L.T("Müzik arşivin");if(favoriteAlbums&&cards.Count==0)ShowFavoritesEmpty(query.Length>0?L.T("Albüm bulunamadı."):L.T("Henüz favori albüm yok."),L.T("Albüme sağ tıklayıp Favorile seçeneğini kullanarak veya albümü açıp kalp düğmesiyle buraya ekleyebilirsin."));SectionTitle.Text=profile?L.T("Albümler"):query.Length>0?L.T("Arama sonuçları"):L.T("Albümler");if(profile)RenderArtist(library.Where(t=>ArtistCatalog.Matches(t,artistName)));}
+  if(gallery){var artistAlbums=profile?ArtistCatalog.AlbumKeys(library,artistName):null;var source=profile?list.Where(t=>artistAlbums!.Contains(t.AlbumKey)):list;if(favoriteAlbums)source=source.Where(t=>favorites.IsAlbumFavorite(t.AlbumKey));var cards=AlbumSorting.Sort(AlbumCards(source),albumSortSettings.Mode);Albums.ItemsSource=cards.Chunk(InterfaceSettings.Current.AlbumColumns).ToArray();PageTitle.Text=favoriteAlbums?L.T("Favoriler"):L.T("Albümlerin");if(favoriteAlbums&&cards.Count==0)ShowFavoritesEmpty(query.Length>0?L.T("Albüm bulunamadı."):L.T("Henüz favori albüm yok."),L.T("Albüme sağ tıklayıp Favorile seçeneğini kullanarak veya albümü açıp kalp düğmesiyle buraya ekleyebilirsin."));SectionTitle.Text=profile?L.T("Albümler"):query.Length>0?L.T("Arama sonuçları"):L.T("Albümler");if(profile)RenderArtist(library.Where(t=>ArtistCatalog.Matches(t,artistName)));}
   else if(view=="artists")
   {
    PageTitle.Text=L.T("Sanatçılar");SectionTitle.Text=L.T("Koleksiyonundaki sanatçılar");
@@ -87,7 +87,7 @@ public partial class MainWindow : Window
    if(view=="playlist"&&rows.Count==0){CollectionEmpty.Visibility=Visibility.Visible;EmptyPlaylistCreate.Visibility=Visibility.Collapsed;CollectionEmptyTitle.Text=L.T("Bu liste müziğini bekliyor.");CollectionEmptyHint.Text=L.T("Albümlerde veya tüm parçalarda bir parçaya sağ tıkla; “Çalma listesine ekle” menüsünden bu listeyi seç.");}
   }
   if(view=="favorites")LibraryStats.Text=L.T($"{library.Count(t=>favorites.IsTrackFavorite(t.Path))} favori parça · {library.Where(t=>favorites.IsAlbumFavorite(t.AlbumKey)).Select(t=>t.AlbumKey).Distinct().Count()} favori albüm");
-  UpdateFavoriteControls();UpdateNextTrack();UpdateQueueTools();UpdateSmartTools();ApplyInterfaceView();
+  UpdateFavoriteControls();UpdateNextTrack();UpdateQueueTools();UpdateSmartTools();UpdateArtistProfileHost();ApplyInterfaceView();CompleteNavigation();
  }
  void UpdateHeroLayout()
  {

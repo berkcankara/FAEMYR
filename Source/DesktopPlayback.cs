@@ -37,6 +37,7 @@ public partial class MainWindow
   SourceInitialized+=(_,_)=>
   {
    mediaSource=HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);if(mediaSource==null)return;mediaSource.AddHook(DesktopMediaMessage);
+   if(InitializeWindowsMedia())return;
    for(int i=0;i<DesktopMediaKeys.Bindings.Length;i++)if(RegisterHotKey(mediaSource.Handle,DesktopMediaKeys.BaseId+i,0x4000,(uint)DesktopMediaKeys.Bindings[i].Key))mediaHotkeys.Add(DesktopMediaKeys.BaseId+i);else fallbackMediaKeys.Add(DesktopMediaKeys.Bindings[i].Key);
    if(fallbackMediaKeys.Count>0){mediaKeyboardCallback=MediaKeyboardMessage;mediaKeyboardHook=SetWindowsHookEx(13,mediaKeyboardCallback,GetModuleHandle(null),0);if(mediaKeyboardHook==IntPtr.Zero)Status.Text=L.T("Bazı multimedya tuşları başka bir uygulama tarafından kullanılıyor; Lyra odaktayken de kullanılabilir.");}
   };
@@ -44,6 +45,7 @@ public partial class MainWindow
  }
  void CloseDesktopPlayback()
  {
+  windowsMedia?.Dispose();windowsMedia=null;
   if(mediaKeyboardHook!=IntPtr.Zero){UnhookWindowsHookEx(mediaKeyboardHook);mediaKeyboardHook=IntPtr.Zero;}mediaKeyboardCallback=null;pressedMediaKeys.Clear();fallbackMediaKeys.Clear();
   if(mediaSource==null)return;foreach(int id in mediaHotkeys)UnregisterHotKey(mediaSource.Handle,id);mediaHotkeys.Clear();mediaSource.RemoveHook(DesktopMediaMessage);mediaSource=null;
  }
@@ -64,6 +66,7 @@ public partial class MainWindow
  }
  IntPtr DesktopMediaMessage(IntPtr hwnd,int message,IntPtr wParam,IntPtr lParam,ref bool handled)
  {
+  if(windowsMedia!=null)return IntPtr.Zero; // Let Windows route media keys to its selected SMTC session exactly once.
   var action=message==0x312&&mediaHotkeys.Contains(wParam.ToInt32())?DesktopMediaKeys.Hotkey(wParam.ToInt32()):message==0x319?DesktopMediaKeys.AppCommand(lParam.ToInt64()):DesktopMediaAction.None;
   if(action==DesktopMediaAction.None)return IntPtr.Zero;handled=true;QueueDesktopAction(action);return new IntPtr(1);
  }
@@ -97,12 +100,14 @@ public partial class MainWindow
  }
  void UpdateDesktopPlayback()
  {
+  UpdateTopBarState();
   if(thumbnailPlay==null)return;
   bool playing=audio.IsPlaying,ready=libraryReady&&!closed,busy=playCts!=null||mediaActionBusy;
   bool canPlay=ready&&!busy&&(playing||audio.IsPaused||now!=null||queue.Count>0||Tracks.Visibility==Visibility.Visible&&Tracks.Items.Count>0);
   bool canPrevious=ready&&!busy&&(playing||audio.IsPaused||queueIndex>=0);
   bool canNext=ready&&!busy&&queueIndex>=0&&order.Peek(queue.Count,queueIndex,false)>=0;
   string description=now==null?"Lyra":$"{now.Title} — {now.Artist}\n{(playing?L.T("Çalıyor"):audio.IsPaused?L.T("Duraklatıldı"):L.T("Durduruldu"))} · Lyra";
+  windowsMedia?.Update(now,playing,audio.IsPaused,ready,canPlay,canPrevious,canNext,PlayerPosition,PlayerDuration);
   string state=$"{playing}|{canPlay}|{canPrevious}|{canNext}|{description}";if(desktopState==state)return;desktopState=state;
   thumbnailPlay.Description=playing?L.T("Duraklat"):L.T("Oynat");thumbnailPlay.ImageSource=SvgIcon.ShellImage(playing?"pause":"play");thumbnailPlay.IsEnabled=canPlay;thumbnailPrevious!.IsEnabled=canPrevious;thumbnailNext!.IsEnabled=canNext;TaskbarItemInfo.Description=description;
  }

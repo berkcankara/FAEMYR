@@ -4,7 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
-namespace Ahenk;
+namespace Faemyr;
 public sealed class TrackToastWindow : Window
 {
  public const double HoldSeconds=2,FadeSeconds=.7;
@@ -14,7 +14,7 @@ public sealed class TrackToastWindow : Window
  readonly DispatcherTimer timer=new(){Interval=TimeSpan.FromMilliseconds(80)};readonly Func<bool> suppressed;long shown;bool fading;int generation;
  public TrackToastWindow(Func<bool>? suppressed=null)
  {
-  this.suppressed=suppressed??DesktopOverlayPolicy.Suppressed;Title="Lyra — Now playing";Width=380;Height=90;WindowStyle=WindowStyle.None;ResizeMode=ResizeMode.NoResize;AllowsTransparency=true;Background=Brushes.Transparent;Topmost=true;ShowInTaskbar=false;ShowActivated=false;Focusable=false;
+  this.suppressed=suppressed??DesktopOverlayPolicy.Suppressed;Title="Faemyr — Now playing";Width=380;Height=90;WindowStyle=WindowStyle.None;ResizeMode=ResizeMode.NoResize;AllowsTransparency=true;Background=Brushes.Transparent;Topmost=true;ShowInTaskbar=false;ShowActivated=false;Focusable=false;
   var border=new Border{CornerRadius=new CornerRadius(14),Padding=new Thickness(16),BorderThickness=new Thickness(1)};border.SetResourceReference(Border.BackgroundProperty,"Surface");border.SetResourceReference(Border.BorderBrushProperty,"Line");Content=border;
   var row=new Grid();row.ColumnDefinitions.Add(new(){Width=new GridLength(56)});row.ColumnDefinitions.Add(new(){Width=new GridLength(1,GridUnitType.Star)});border.Child=row;
   var art=new Grid();var fallback=new SvgIcon{Icon="music",Width=25,Height=25};fallback.SetResourceReference(SvgIcon.BrushProperty,"Muted");art.Children.Add(fallback);art.Children.Add(cover);row.Children.Add(art);

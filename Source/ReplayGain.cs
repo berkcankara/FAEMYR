@@ -5,7 +5,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using NAudio.Wave;
 
-namespace Ahenk;
+namespace Faemyr;
 public enum GainMode{Off,Track,Album}
 public sealed class AudioPreferences
 {

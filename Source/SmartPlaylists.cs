@@ -3,7 +3,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
-namespace Ahenk;
+namespace Faemyr;
 public static class TrackQuery
 {
  public static string Help=>L.T("Sözcük veya tırnak içindeki ifadelerle ara. Koşullar birlikte uygulanır.\n\nartist:Metallica\nalbum:\"Bad Apple!!\"\nformat:flac\nyear:1990..2000\nbits:>=24 rate:>=96000\nrating:>=4\nplays:0\nadded:30d\nplayed:never\nfavorite:true\nmissing:true\nduration:<300\n\nSüre saniye, örnekleme oranı Hz olarak yazılır. added:30d son 30 günde eklenenlerdir. -artist:Deneme koşulu dışlar.");
@@ -54,7 +54,7 @@ public partial class MainWindow
  void InitializeSmartLists(){SmartView.ItemsSource=SmartPresets;SmartView.DisplayMemberPath="Name";SmartView.SelectedIndex=0;}
  void SmartView_Changed(object sender,SelectionChangedEventArgs e){if(libraryReady)RefreshView();}
  void UpdateSmartTools(){SmartTools.Visibility=Visible(view=="tracks");}
- void FilterHelp_Click(object sender,RoutedEventArgs e)=>MessageBox.Show(settingsWindow??this,TrackQuery.Help,L.T("Lyra — Filtre yardımı"),MessageBoxButton.OK,MessageBoxImage.Information);
+ void FilterHelp_Click(object sender,RoutedEventArgs e)=>MessageBox.Show(settingsWindow??this,TrackQuery.Help,L.T("Faemyr — Filtre yardımı"),MessageBoxButton.OK,MessageBoxImage.Information);
  void NewSmartPlaylist_Click(object sender,RoutedEventArgs e)=>EditSmartPlaylist(null);
  void EditSmartPlaylist(LocalPlaylist? existing)
  {

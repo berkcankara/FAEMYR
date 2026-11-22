@@ -2,7 +2,7 @@ using System.Buffers.Binary;
 using System.Runtime.InteropServices;
 using NAudio.Wave;
 
-namespace Ahenk;
+namespace Faemyr;
 public static class AudioFormats
 {
  public static WaveFormat Extensible(WaveFormat format)

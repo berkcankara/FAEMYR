@@ -7,7 +7,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
 
-namespace Ahenk;
+namespace Faemyr;
 public sealed class FullscreenControlsIdleState
 {
  public const double DelaySeconds=5;

@@ -4,7 +4,7 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using NAudio.Wave;
-namespace Ahenk;
+namespace Faemyr;
 public static class LibrarySyncTests
 {
  static T Field<T>(MainWindow window,string name)=>(T)typeof(MainWindow).GetField(name,BindingFlags.Instance|BindingFlags.NonPublic)!.GetValue(window)!;

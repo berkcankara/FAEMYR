@@ -2,7 +2,7 @@ using System.IO;
 using System.Text.Json;
 using NAudio.Wave;
 using NAudio.CoreAudioApi;
-namespace Ahenk;
+namespace Faemyr;
 public static class PcmCompatibilityTests
 {
  sealed class Bytes(byte[] data,WaveFormat format):IWaveProvider

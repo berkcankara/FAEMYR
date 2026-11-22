@@ -1,7 +1,7 @@
 using System.Windows;
 using System.Windows.Media;
 
-namespace Ahenk;
+namespace Faemyr;
 
 // Keep every edge inside the drawing bounds. Tint the brush directly so this
 // tiny caption glyph never needs a translucent intermediate rendering layer.

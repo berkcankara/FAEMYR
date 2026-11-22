@@ -1,7 +1,7 @@
 using System.Buffers.Binary;
 using NAudio.Wave;
 
-namespace Ahenk;
+namespace Faemyr;
 // The original format and bytes pass through at unity. Attenuation is deliberately
 // reported as sample processing. Never put this provider in a DoP carrier path.
 public sealed class VolumeSource : IWaveProvider

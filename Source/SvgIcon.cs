@@ -4,7 +4,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Xml.Linq;
 
-namespace Ahenk;
+namespace Faemyr;
 // The bundled SVG paths render directly as native vectors at any Windows display scale.
 public sealed class SvgIcon : FrameworkElement
 {
@@ -17,7 +17,7 @@ public sealed class SvgIcon : FrameworkElement
  static List<Shape> Read(string name)
  {
   if(cache.TryGetValue(name,out var shapes))return shapes;
-  var assembly=Assembly.GetExecutingAssembly();using var stream=assembly.GetManifestResourceStream("Ahenk.Assets.Icons."+name+".svg");shapes=[];
+  var assembly=Assembly.GetExecutingAssembly();using var stream=assembly.GetManifestResourceStream("Faemyr.Assets.Icons."+name+".svg");shapes=[];
   if(stream!=null)foreach(var p in XDocument.Load(stream).Descendants().Where(e=>e.Name.LocalName=="path")){var g=Geometry.Parse((string?)p.Attribute("d")??"");g.Freeze();shapes.Add(new(g,(string?)p.Attribute("fill")!="none",double.TryParse((string?)p.Attribute("stroke-width"),CultureInfo.InvariantCulture,out var width)?width:1.8));}
   return cache[name]=shapes;
  }

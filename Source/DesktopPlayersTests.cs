@@ -10,7 +10,7 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Runtime.InteropServices;
 using NAudio.Wave;
-namespace Ahenk;
+namespace Faemyr;
 public static class DesktopPlayersTests
 {
  static T Field<T>(object window,string name)=>(T)window.GetType().GetField(name,BindingFlags.NonPublic|BindingFlags.Instance)!.GetValue(window)!;
@@ -35,7 +35,7 @@ public static class DesktopPlayersTests
   {
    var gate=new TrackChangeGate();Check(gate.Changed("one")&&!gate.Changed("ONE")&&!gate.Changed(null)&&gate.Changed("two")&&gate.Changed("one"),"Track changes deduplicate timer ticks but accept later returns");
    foreach(int state in new[]{1,4,6})Check(DesktopOverlayPolicy.ShellBlocks(state),"Shell blocks notifications in state "+state);Check(!DesktopOverlayPolicy.ShellBlocks(5),"Normal notification state allowed");
-   Check(!DesktopOverlayPolicy.ShouldSuppress(2,true,true,true,true,false),"Maximized Lyra does not suppress its own track notification");
+   Check(!DesktopOverlayPolicy.ShouldSuppress(2,true,true,true,true,false),"Maximized Faemyr does not suppress its own track notification");
    Check(!DesktopOverlayPolicy.ShouldSuppress(2,false,true,false,false,true),"Shell busy from another background window does not hide a desktop notification");
    Check(!DesktopOverlayPolicy.ShouldSuppress(2,false,true,true,true,true),"A normally maximized app with an auto-hidden taskbar is allowed");
    Check(DesktopOverlayPolicy.ShouldSuppress(2,false,true,true,false,false)&&DesktopOverlayPolicy.ShouldSuppress(3,false,false,false,false,false),"Borderless and exclusive fullscreen remain suppressed");

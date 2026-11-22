@@ -3,7 +3,7 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-namespace Ahenk;
+namespace Faemyr;
 public sealed record CuePart(string File,int Number,string Title,string Artist,long CdFrames);
 public sealed record CueDocument(string Title,string Artist,string Date,List<CuePart> Parts);
 public static class CueSheet

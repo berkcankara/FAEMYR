@@ -3,7 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 
-namespace Ahenk;
+namespace Faemyr;
 public static class LyricEmphasis
 {
  public const double Enlargement=1.12;

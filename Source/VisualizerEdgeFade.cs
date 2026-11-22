@@ -1,7 +1,7 @@
 using System.Windows;
 using System.Windows.Media;
 
-namespace Ahenk;
+namespace Faemyr;
 public sealed partial class OscilloscopeView
 {
  Brush? plotEdgeMask;double plotEdgeLeft,plotEdgeWidth;

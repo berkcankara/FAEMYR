@@ -7,7 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace Ahenk;
+namespace Faemyr;
 
 public enum VisualizerMode { Oscilloscope,Spectrum,VuMeter,Spectrogram }
 public sealed class VisualizerPreferences

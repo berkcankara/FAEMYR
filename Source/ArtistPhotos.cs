@@ -6,7 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Windows.Media.Imaging;
-namespace Ahenk;
+namespace Faemyr;
 
 public sealed class ArtistPhotoPreferences
 {
@@ -36,7 +36,7 @@ public sealed class ArtistPhotoStore : IDisposable
  sealed class Request(string name,bool force,int priority){public string Name=name;public bool Force=force,Started;public int Priority=priority;public TaskCompletionSource<ArtistPhoto?> Completion=new(TaskCreationOptions.RunContinuationsAsynchronously);}
  public ArtistPhotoStore(string directory,HttpMessageHandler? handler=null)
  {
-  this.directory=directory;client=handler==null?new HttpClient(new HttpClientHandler{AllowAutoRedirect=false,AutomaticDecompression=DecompressionMethods.All}):new HttpClient(handler);client.Timeout=TimeSpan.FromSeconds(18);client.DefaultRequestHeaders.UserAgent.ParseAdd("Lyra/0.7.2 (Windows desktop music library)");_ = Task.Run(Worker);
+  this.directory=directory;client=handler==null?new HttpClient(new HttpClientHandler{AllowAutoRedirect=false,AutomaticDecompression=DecompressionMethods.All}):new HttpClient(handler);client.Timeout=TimeSpan.FromSeconds(18);client.DefaultRequestHeaders.UserAgent.ParseAdd($"Faemyr/{AppBrand.Version} (Windows desktop music library)");_ = Task.Run(Worker);
  }
  public static string Identity(string name)=>ArtistCatalog.Credits(name).FirstOrDefault()?.Profile.Trim()??"";
  string Key(string name)=>Paths.Hash(Identity(name).ToUpperInvariant());
@@ -51,7 +51,7 @@ public sealed class ArtistPhotoStore : IDisposable
  {
   name=Identity(name);if(name.Length==0||name.Length>180||Disposed)return Task.FromResult<ArtistPhoto?>(null);
   var cached=Cached(name);if(!force&&cached!=null&&cached.RetryAfter>DateTimeOffset.UtcNow&&(cached.File.Length==0||ImagePath(cached)!=null))return Task.FromResult<ArtistPhoto?>(cached);
-  if(Environment.GetEnvironmentVariable("LYRA_ARTIST_PHOTOS_OFFLINE")=="1")return Task.FromResult(cached);
+  if(AppBrand.Offline("ARTIST_PHOTOS"))return Task.FromResult(cached);
   lock(gate)
   {
    if(pending.TryGetValue(name,out var request)){if(priority&&!request.Started&&request.Priority>0){request.Priority=0;queue.Enqueue(request,0);available.Release();}return request.Completion.Task;}

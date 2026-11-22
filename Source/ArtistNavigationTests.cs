@@ -4,7 +4,7 @@ using System.Windows.Documents;
 using System.IO;
 using System.Text.Json;
 
-namespace Ahenk;
+namespace Faemyr;
 public static class ArtistNavigationTests
 {
  public static void Run(Action<bool,string> check)
@@ -41,6 +41,15 @@ public static class ArtistNavigationTests
   check(ArtistCatalog.AlbumKeys(ampersandReleases,"Röyksopp").SetEquals(new[]{royksopp.AlbumKey,royksoppRemix.AlbumKey})&&ArtistCatalog.AlbumKeys(ampersandReleases,"Alison Goldfrapp").SetEquals(new[]{goldfrapp.AlbumKey}),"Guest solo releases remain independent while ampersand credits belong to the main artist");
   check(ArtistCatalog.Names(new Track{Fields=[new("Vorbis / ARTIST","Other Artist & Guest")]}).SequenceEqual(new[]{"Other Artist"})&&ArtistCatalog.ResolveProfile(ampersandReleases,"RÖYKSOPP & Alison Goldfrapp")=="Röyksopp","Ampersand normalization applies to raw tag fallback and navigation aliases across all artists");
   check(ArtistCatalog.Credits("&ME").Single().Profile=="&ME"&&ArtistCatalog.Credits("Ada").Single().Profile=="Ada","Leading ampersand and unfeatured artist names remain valid identities");
+  var groupLabels=new[]{"Above & Beyond","above&beyond","Above  &  Beyond","Above & Beyond feat. Guest","Above & Beyond & Guest","Above & Beyond / Guest"};
+  check(groupLabels.All(label=>ArtistCatalog.Credits(label).Single().Profile=="Above & Beyond"&&ArtistCatalog.Credits(label).Single().Label==label),"Above & Beyond remains a complete identity with spacing/case variations and additional guest credits");
+  check(new[]{"Simon & Garfunkel","Belle & Sebastian","Earth, Wind & Fire","Of Mice & Men","Nick Cave & The Bad Seeds","Hall & Oates","Kool & The Gang"}.All(name=>ArtistCatalog.Credits(name+" & Guest").Single().Profile==name),"Known compound group names retain their ampersands while following guests are excluded");
+  check(ArtistCatalog.Credits("Above & Beyonder").Single().Profile=="Above"&&ArtistCatalog.Credits("Other Artist & Above & Beyond").Single().Profile=="Other Artist","Compound-name protection only matches a complete leading group name");
+  var above=new Track{Artist="Above & Beyond",AlbumArtist="OceanLab",Album="Sirens Of The Sea"};var aboveGuest=new Track{Artist="Above & Beyond feat. Guest",AlbumArtist="Above & Beyond",Album="Other Album"};
+  var groupTracks=new[]{above,aboveGuest,royksoppRemix};
+  check(ArtistCatalog.Cards(groupTracks).Select(c=>c.Name).ToHashSet(StringComparer.OrdinalIgnoreCase).SetEquals(new[]{"Above & Beyond","Röyksopp"})&&ArtistCatalog.Cards(groupTracks).Single(c=>c.Name=="Above & Beyond") is {Albums:2,Tracks:2},"Group releases merge correctly without creating Above, Beyond, OceanLab or guest profiles");
+  check(ArtistCatalog.ResolveProfile(groupTracks,"above&beyond")=="Above & Beyond"&&ArtistPhotoStore.Identity("Above & Beyond feat. Guest")=="Above & Beyond","Navigation and artist photo/biography identity use the complete canonical group name");
+  check(ArtistCatalog.ResolveSavedProfile(groupTracks,"Above")=="Above & Beyond"&&ArtistCatalog.ResolveSavedProfile(groupTracks.Append(new Track{Artist="Above"}),"Above")=="Above"&&ArtistCatalog.ResolveSavedProfile(groupTracks,"Missing")==null,"Saved truncated group profiles recover on restart without overriding a real artist with the shorter name");
   var featured=new Track{Artist="Ada feat. Deniz",AlbumArtist="Ada",Album="One",Fields=[new("Vorbis / ARTIST","Ada feat. Deniz"),new("Kapsayıcı / ARTIST","Ada feat. Deniz")]};
   var plain=new Track{Artist="Ada",AlbumArtist="Ada",Album="Two"};var deniz=new Track{Artist="Deniz",AlbumArtist="Deniz",Album="Solo"};
   var releases=new[]{featured,plain,deniz};var artistCards=ArtistCatalog.Cards(releases);
@@ -67,6 +76,7 @@ public static class ArtistNavigationTests
   links.AllowedNames=new HashSet<string>(["Ada"],StringComparer.OrdinalIgnoreCase);
   check(links.Inlines.OfType<Hyperlink>().Count()==1&&featured.Artist=="Ada feat. Deniz"&&featured.Fields[0].Value==featured.Artist,"Allowed album links use the normalized identity without rewriting track credits");
   links.AllowedNames=null;links.Names="Röyksopp & Alison Goldfrapp";var ampLink=links.Inlines.OfType<Hyperlink>().Single();ampLink.RaiseEvent(new RoutedEventArgs(Hyperlink.ClickEvent));check(requested=="Röyksopp"&&string.Concat(ampLink.Inlines.OfType<Run>().Select(run=>run.Text))=="Röyksopp & Alison Goldfrapp"&&royksoppRemix.Artist==links.Names,"Shared player, album and metadata artist links navigate to the main profile without rewriting tags");
+  links.AllowedNames=ArtistCatalog.ProfileNames(groupTracks);links.Names="Above & Beyond feat. Guest";var groupLink=links.Inlines.OfType<Hyperlink>().Single();groupLink.RaiseEvent(new RoutedEventArgs(Hyperlink.ClickEvent));check(requested=="Above & Beyond"&&string.Concat(groupLink.Inlines.OfType<Run>().Select(run=>run.Text))==links.Names,"Player and album links open the full group profile while preserving displayed guest credits");links.AllowedNames=null;
   var slashLabels=new[]{"Sidewalks and Skeletons / Goo Munday","Sidewalks and Skeletons / CASHFORGOLD / Ferngazer","Sidewalks and Skeletons/ Goo Munday","Sidewalks and Skeletons /Goo Munday","Sidewalks and Skeletons / Guest & Other","Sidewalks and Skeletons feat. Guest / Other"};
   check(slashLabels.All(label=>ArtistCatalog.Credits(label).Single() is {Profile:"Sidewalks and Skeletons"}&&ArtistCatalog.Credits(label).Single().Label==label),"Spaced slash variations and mixed markers use the main identity without altering displayed credits");
   var sidewalk=new Track{Artist="Sidewalks and Skeletons / Goo Munday",AlbumArtist="Sidewalks and Skeletons",Album="Exorcism"};var sidewalkSolo=new Track{Artist="Sidewalks and Skeletons",AlbumArtist="Sidewalks and Skeletons",Album="White Light"};var gooSolo=new Track{Artist="Goo Munday",AlbumArtist="Goo Munday",Album="Solo"};var sidewalkTracks=new[]{sidewalk,sidewalkSolo,gooSolo};
@@ -79,7 +89,7 @@ public static class ArtistNavigationTests
   string path=Path.Combine(directory,"artist-archive.json");if(!File.Exists(path))return;
   var tracks=JsonSerializer.Deserialize<List<Track>>(File.ReadAllText(path))!;var cards=ArtistCatalog.Cards(tracks);
   check(cards.All(c=>!System.Text.RegularExpressions.Regex.IsMatch(c.Name,@"\s(?:feat\.?|ft\.?|featuring)\s",System.Text.RegularExpressions.RegexOptions.IgnoreCase)),"Actual archive has no separate featured-credit profile cards");
-  check(cards.All(c=>!System.Text.RegularExpressions.Regex.IsMatch(c.Name,@"\S\s*&\s*\S")),"Actual archive has no compound ampersand-credit profile cards for any artist");
+  check(cards.All(c=>!System.Text.RegularExpressions.Regex.IsMatch(c.Name,@"\S\s*&\s*\S")||ArtistCatalog.Credits(c.Name).Single().Profile==c.Name),"Actual archive preserves genuine compound artist names without introducing guest profiles");
   var sidewalkTracks=tracks.Where(t=>t.Artist.StartsWith("Sidewalks and Skeletons",StringComparison.OrdinalIgnoreCase)).ToList();check(cards.Single(c=>c.Name=="Sidewalks and Skeletons").Tracks==sidewalkTracks.Count&&cards.Single(c=>c.Name=="Sidewalks and Skeletons").Albums==sidewalkTracks.Select(t=>t.AlbumKey).Distinct().Count(),"Actual Sidewalks and Skeletons profile includes every slash-credit Exorcism track");
   check(!ArtistCatalog.ProfileNames(tracks.Where(t=>t.AlbumArtist=="Sidewalks and Skeletons")).Any(n=>n!="Sidewalks and Skeletons"),"Sidewalks and Skeletons albums create no guest profiles anywhere in the archive");
   check(cards.Single(c=>c.Name=="Howard Shore") is {Albums:6,Tracks:217},"Actual archive merges all Howard Shore credits into six albums and 217 tracks");

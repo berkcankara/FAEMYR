@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.Json;
 using NAudio.CoreAudioApi;
 using NAudio.Wave;
-namespace Ahenk;
+namespace Faemyr;
 public static class UpgradeTests
 {
  static byte[] Read(IWaveProvider source,int frames=517){using var memory=new MemoryStream();byte[] bytes=new byte[source.WaveFormat.BlockAlign*frames+12];int n;while((n=source.Read(bytes,6,bytes.Length-12))>0)memory.Write(bytes,6,n);return memory.ToArray();}

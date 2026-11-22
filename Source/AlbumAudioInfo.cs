@@ -1,5 +1,5 @@
 using System.Globalization;
-namespace Ahenk;
+namespace Faemyr;
 
 public sealed record AlbumAudioInfo(string Text,string Details)
 {

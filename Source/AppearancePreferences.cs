@@ -3,15 +3,16 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Windows.Media;
 
-namespace Ahenk;
+namespace Faemyr;
 public sealed class AppearancePreferences
 {
  public string? Accent {get;set;}
  public string? PlayingColor {get;set;}
  public double ListOpacity {get;set;}=70;
  public double BlurRadius {get;set;}=24;
+ public bool ModuleTransparency {get;set;}
  public Dictionary<string,string> Colors{get;set;}=new(StringComparer.Ordinal);
- public AppearancePreferences Copy()=>new(){Accent=Accent,PlayingColor=PlayingColor,ListOpacity=ListOpacity,BlurRadius=BlurRadius,Colors=new(Colors??[],StringComparer.Ordinal)};
+ public AppearancePreferences Copy()=>new(){Accent=Accent,PlayingColor=PlayingColor,ListOpacity=ListOpacity,BlurRadius=BlurRadius,ModuleTransparency=ModuleTransparency,Colors=new(Colors??[],StringComparer.Ordinal)};
  public static string? NormalizeHex(string? value)
  {
   string text=(value??"").Trim();if(!text.StartsWith('#'))text="#"+text;

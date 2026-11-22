@@ -4,13 +4,13 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using System.Windows;
-namespace Ahenk;
+namespace Faemyr;
 
 public static class L
 {
  public static string Current{get;private set;}="tr";
  static readonly Dictionary<string,string> english=Read();
- static Dictionary<string,string> Read(){using var stream=typeof(L).Assembly.GetManifestResourceStream("Ahenk.Assets.en.json")!;return JsonSerializer.Deserialize<Dictionary<string,string>>(stream)!;}
+ static Dictionary<string,string> Read(){using var stream=typeof(L).Assembly.GetManifestResourceStream("Faemyr.Assets.en.json")!;return JsonSerializer.Deserialize<Dictionary<string,string>>(stream)!;}
  public static string T(string text)=>Current=="en"&&english.TryGetValue(text,out var translated)?translated:text;
  public static string T(ref LocalizedStringHandler text)=>text.ToString();
  public static string LanguagePath=>Path.Combine(Paths.Data,"language.json");

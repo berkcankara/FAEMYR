@@ -1,12 +1,19 @@
 using System.Windows;
-namespace Ahenk;
+namespace Faemyr;
 public partial class App : Application
 {
- void Window_Loaded(object sender,RoutedEventArgs e){if(sender is Window window){window.Icon??=new System.Windows.Media.Imaging.BitmapImage(new Uri("pack://application:,,,/Assets/Lyra.ico"));NativeAppearance.Apply(window);}}
+ void Window_Loaded(object sender,RoutedEventArgs e){if(sender is Window window){window.Icon??=new System.Windows.Media.Imaging.BitmapImage(new Uri("pack://application:,,,/Assets/Faemyr.ico"));NativeAppearance.Apply(window);}}
  protected override async void OnStartup(StartupEventArgs e)
  {
   base.OnStartup(e);
+  // Old portable and installer shortcuts still work, but the actual Windows
+  // process/session always belongs to the renamed executable.
+  if(AppBrand.ForwardLegacyLaunch(e.Args)){Shutdown(0);return;}
   L.Load();
+  if(e.Args.Contains("--register-windows-app-only")){var result=DesktopApplicationRegistration.RegisterCurrent();Shutdown(result.Registered?0:1);return;}
+  if(e.Args.Length>=2&&e.Args[0]=="--album-discs-test"){try{await AlbumDiscsTests.Run(e.Args[1]);Shutdown(0);}catch(Exception ex){System.IO.Directory.CreateDirectory(e.Args[1]);System.IO.File.WriteAllText(System.IO.Path.Combine(e.Args[1],"album-discs-error.txt"),ex.ToString());Shutdown(1);}return;}
+  if(e.Args.Length>=2&&e.Args[0]=="--gallery-sections-test"){try{await GallerySectionsTests.Run(e.Args[1]);Shutdown(0);}catch(Exception ex){System.IO.Directory.CreateDirectory(e.Args[1]);System.IO.File.WriteAllText(System.IO.Path.Combine(e.Args[1],"gallery-sections-error.txt"),ex.ToString());Shutdown(1);}return;}
+  if(e.Args.Length>=2&&e.Args[0]=="--page-backdrop-test"){try{await PageBackdropTests.Run(e.Args[1]);Shutdown(0);}catch(Exception ex){System.IO.Directory.CreateDirectory(e.Args[1]);System.IO.File.WriteAllText(System.IO.Path.Combine(e.Args[1],"page-backdrop-error.txt"),ex.ToString());Shutdown(1);}return;}
   if(e.Args.Length>=2&&e.Args[0]=="--fullscreen-lyrics-test"){try{await FullscreenLyricsTests.Run(e.Args[1]);Shutdown(0);}catch(Exception ex){System.IO.Directory.CreateDirectory(e.Args[1]);System.IO.File.WriteAllText(System.IO.Path.Combine(e.Args[1],"fullscreen-lyrics-error.txt"),ex.ToString());Shutdown(1);}return;}
   if(e.Args.Length>=2&&e.Args[0]=="--maximized-header-test"){try{await MaximizedHeaderTests.Run(e.Args[1]);Shutdown(0);}catch(Exception ex){System.IO.Directory.CreateDirectory(e.Args[1]);System.IO.File.WriteAllText(System.IO.Path.Combine(e.Args[1],"maximized-header-error.txt"),ex.ToString());Shutdown(1);}return;}
   if(e.Args.Length>=2&&e.Args[0]=="--top-bar-test"){try{await TopBarTests.Run(e.Args[1]);Shutdown(0);}catch(Exception ex){System.IO.Directory.CreateDirectory(e.Args[1]);System.IO.File.WriteAllText(System.IO.Path.Combine(e.Args[1],"top-bar-error.txt"),ex.ToString());Shutdown(1);}return;}
@@ -42,7 +49,7 @@ public partial class App : Application
   if(e.Args.Length>=2&&e.Args[0]=="--experience-test"){try{await ExperienceTests.Run(e.Args[1]);Shutdown(0);}catch(Exception ex){System.IO.Directory.CreateDirectory(e.Args[1]);System.IO.File.WriteAllText(System.IO.Path.Combine(e.Args[1],"experience-error.txt"),ex.ToString());Shutdown(1);}return;}
   if(e.Args.Length>=2&&e.Args[0]=="--audio-check"){try{await AudioDiagnostics.Run(e.Args[1]);Shutdown(0);}catch(Exception ex){System.IO.Directory.CreateDirectory(e.Args[1]);System.IO.File.WriteAllText(System.IO.Path.Combine(e.Args[1],"audio-error.txt"),ex.ToString());Shutdown(1);}return;}
   if(e.Args.Length >= 2 && e.Args[0] == "--self-test") { try { await SelfTest.Run(e.Args[1]); Shutdown(0); } catch(Exception ex) { System.IO.File.WriteAllText(System.IO.Path.Combine(e.Args[1],"test-error.txt"),ex.ToString()); Shutdown(1); } return; }
-  DispatcherUnhandledException += (_,args)=> { MessageBox.Show(args.Exception.Message,"Lyra — hata"); args.Handled=true; };
+  DispatcherUnhandledException += (_,args)=> { MessageBox.Show(args.Exception.Message,"Faemyr — hata"); args.Handled=true; };
   if(e.Args.Length>=2&&e.Args[0]=="--startup-benchmark")StartupMetrics.Start(e.Args[1]);
   if(!StartupMetrics.Enabled&&e.Args.Contains("--register-windows-app"))DesktopApplicationRegistration.RegisterCurrent();
   Themes.Load();var main=new MainWindow();if(StartupMetrics.Enabled){main.Opacity=0;main.ShowInTaskbar=false;}main.Show();

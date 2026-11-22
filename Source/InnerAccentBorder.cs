@@ -3,7 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace Ahenk;
+namespace Faemyr;
 // Paint only the card background. A continuous distance field replaces stacked
 // strokes; subpixel coverage smooths the corners without rasterizing the content.
 public sealed class InnerAccentBorder : Border

@@ -1,7 +1,7 @@
 using System.Windows;
 using System.Windows.Media;
 
-namespace Ahenk;
+namespace Faemyr;
 // Visual analysis only: neither the output samples nor the playback volume change.
 public sealed class FullscreenAmbience
 {

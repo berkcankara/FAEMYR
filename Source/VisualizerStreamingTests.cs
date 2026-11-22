@@ -6,7 +6,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using NAudio.Wave;
-namespace Ahenk;
+namespace Faemyr;
 
 public static class VisualizerStreamingTests
 {

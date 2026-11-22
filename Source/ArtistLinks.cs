@@ -3,7 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Text.RegularExpressions;
 
-namespace Ahenk;
+namespace Faemyr;
 
 public static class ArtistCatalog
 {
@@ -11,6 +11,18 @@ public static class ArtistCatalog
  static readonly Regex FeatureMarker=new(@"(?:\s+|[\(\[]\s*)(?:feat(?:uring)?|ft)\.?\s+",RegexOptions.IgnoreCase|RegexOptions.CultureInvariant|RegexOptions.Compiled);
  static readonly Regex AmpersandMarker=new(@"(?<=\S)\s*&\s*(?=\S)",RegexOptions.CultureInvariant|RegexOptions.Compiled);
  static readonly Regex SlashMarker=new(@"(?<=\S)(?:\s+/\s*|/\s+)(?=\S)",RegexOptions.CultureInvariant|RegexOptions.Compiled);
+ // An ampersand can be part of the recording artist's actual name. Protect
+ // complete group names before interpreting subsequent separators as guests.
+ static readonly (string Name,Regex Prefix)[] CompoundArtists=new[]{
+  "Above & Beyond","Simon & Garfunkel","Belle & Sebastian","Earth, Wind & Fire",
+  "Of Mice & Men","Nick Cave & The Bad Seeds","Hall & Oates","Kool & The Gang"
+ }.OrderByDescending(name=>name.Length).Select(name=>(name,new Regex("^"+string.Join(@"\s*&\s*",name.Split('&').Select(part=>Regex.Escape(part.Trim()).Replace(@"\ ",@"\s+")))+@"(?=$|[\s(/;&\[])",RegexOptions.IgnoreCase|RegexOptions.CultureInvariant|RegexOptions.Compiled))).ToArray();
+ static (string? Name,int Length) CompoundPrefix(string text)
+ {
+  foreach(var artist in CompoundArtists){var match=artist.Prefix.Match(text);if(match.Success)return(artist.Name,match.Length);}
+  return(null,0);
+ }
+ static string ProfileIdentity(string name){var group=CompoundPrefix(name);return group.Name!=null&&group.Length==name.Length?group.Name:name;}
  public sealed record Credit(string Label,string Profile);
  public static string[] Split(string? value)=>(value??"").Split([" / ",";","\r\n","\n"],StringSplitOptions.RemoveEmptyEntries|StringSplitOptions.TrimEntries).Distinct(Identity).ToArray();
  // Retain the full credit for display, but use only the leading artists as profile identities.
@@ -18,14 +30,14 @@ public static class ArtistCatalog
  // Split after removing the feature suffix so guest separators never create extra profiles.
  public static Credit[] Credits(string? value)
  {
-  string text=value??"";var feature=FeatureMarker.Match(text);var ampersand=AmpersandMarker.Match(text);
+  string text=(value??"").Trim();var feature=FeatureMarker.Match(text);var compound=CompoundPrefix(text);var ampersand=AmpersandMarker.Match(text,compound.Length);
   if(ampersand.Success&&(!feature.Success||ampersand.Index<feature.Index))feature=ampersand;
   var slash=SlashMarker.Match(text);if(slash.Success&&(!feature.Success||slash.Index<feature.Index))feature=slash;
   string head=feature.Success?text[..feature.Index].TrimEnd(' ','\t','(','[',','):text;
   var names=Split(head);if(names.Length==0)return Split(text).Select(n=>new Credit(n,n)).ToArray();
   string tail=feature.Success?text[feature.Index..]:"";
   if(tail.Length>0&&!char.IsWhiteSpace(tail[0])&&tail[0] is not ('&' or '/'))tail=" "+tail;
-  return names.Select((name,i)=>new Credit(name+(i==names.Length-1?tail:""),name)).ToArray();
+  return names.Select((name,i)=>new Credit(name+(i==names.Length-1?tail:""),ProfileIdentity(name))).ToArray();
  }
  public static bool IsArtistField(string key)
  {
@@ -44,6 +56,15 @@ public static class ArtistCatalog
  public static string? ResolveProfile(IEnumerable<Track> tracks,string label)
  {
   var profiles=ProfileNames(tracks);foreach(var credit in Credits(label))if(profiles.TryGetValue(credit.Profile,out var profile))return profile;return null;
+ }
+ public static string? ResolveSavedProfile(IEnumerable<Track> tracks,string label)
+ {
+  if(ResolveProfile(tracks,label) is {} exact)return exact;
+  var profiles=ProfileNames(tracks);
+  var replacements=CompoundArtists.Where(artist=>profiles.Contains(artist.Name))
+   .Where(artist=>{var marker=AmpersandMarker.Match(artist.Name);return marker.Success&&Identity.Equals(artist.Name[..marker.Index].Trim(),label.Trim());})
+   .Select(artist=>artist.Name).Distinct(Identity).ToArray();
+  return replacements.Length==1?replacements[0]:null;
  }
  public static List<ArtistCard> Cards(IEnumerable<Track> tracks,string query="")=>tracks
   .SelectMany(t=>Names(t).Select(name=>(Name:name,Track:t))).GroupBy(x=>x.Name,Identity)

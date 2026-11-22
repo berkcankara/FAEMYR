@@ -1,5 +1,5 @@
 using System.IO;
-namespace Ahenk;
+namespace Faemyr;
 
 // An absent drive or unreadable directory is unknown, not evidence of deletion.
 // Cache directory listings for this pass only; never open/decode music files.
@@ -53,7 +53,7 @@ public partial class MainWindow
    if(now!=null&&keys.Contains(now.Path))
    {
     await RunDesktopAction(DesktopMediaAction.Stop);now=null;inspectedTrack=null;panelCoverPath="";
-    DetailTitle.Text=L.T("Henüz çalan parça yok");DetailArtist.Names="";DetailQuality.Text="";Metadata.ItemsSource=null;
+    DetailTitle.Text=L.T("Henüz çalan parça yok");DetailArtist.Names="";DetailQuality.Text="";Metadata.ItemsSource=null;DetailAlbumLink.IsEnabled=false;DetailAlbumLink.Tag=null;DetailAlbumLink.ToolTip=null;
     PanelCover.SetResourceReference(System.Windows.Controls.Border.BackgroundProperty,"Surface");CoverFallback.Visibility=System.Windows.Visibility.Visible;
     lyricsCts?.Cancel();lyricsSelection++;lyricsDocument=null;RenderLyrics(null);UpdateLyricsVisibility();if(fullscreenPlayer)UpdateFullscreenLayout();
    }

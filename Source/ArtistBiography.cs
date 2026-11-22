@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-namespace Ahenk;
+namespace Faemyr;
 public sealed class ArtistBiography
 {
  public string Artist{get;set;}="";
@@ -23,7 +23,7 @@ public sealed class ArtistBiographyService:IDisposable
  public ArtistBiographyService(string directory,HttpMessageHandler? handler=null)
  {
   this.directory=directory;client=handler==null?new(new HttpClientHandler{AllowAutoRedirect=false,AutomaticDecompression=DecompressionMethods.All}):new(handler);
-  client.Timeout=TimeSpan.FromSeconds(12);client.DefaultRequestHeaders.UserAgent.ParseAdd("Lyra/0.10.11 (desktop music player; https://github.com/berkcankara/LYRA-Lossless-Music-Player)");
+  client.Timeout=TimeSpan.FromSeconds(12);client.DefaultRequestHeaders.UserAgent.ParseAdd($"Faemyr/{AppBrand.Version} (desktop music player; https://github.com/berkcankara/FAEMYR-Lossless-Music-Player)");
  }
  public static string Language(string language)=>language=="en"?"en":"tr";
  public static string Key(string artist,string language)=>Paths.Hash(ArtistPhotoStore.Identity(artist).ToUpperInvariant()+"|"+Language(language));
@@ -84,7 +84,7 @@ public sealed class ArtistBiographyService:IDisposable
  {
   artist=ArtistPhotoStore.Identity(artist);language=Language(language);if(artist.Length==0||artist.Length>180)return null;
   var cached=await ReadCache(artist,language,ct);if(cached!=null&&cached.ContentVersion>=2&&cached.CheckedAt>DateTimeOffset.UtcNow.AddDays(cached.Text.Length>0?-30:-1))return cached;
-  if(Environment.GetEnvironmentVariable("LYRA_ARTIST_BIOGRAPHY_OFFLINE")=="1")return cached;
+  if(AppBrand.Offline("ARTIST_BIOGRAPHY"))return cached;
   await gate.WaitAsync(ct);
   try
   {

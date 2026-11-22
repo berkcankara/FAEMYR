@@ -2,7 +2,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace Ahenk;
+namespace Faemyr;
 public sealed class LyricsPreferences
 {
  public bool FollowCurrentLine{get;set;}=true;

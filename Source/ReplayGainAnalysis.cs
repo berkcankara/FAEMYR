@@ -4,7 +4,7 @@ using System.IO;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-namespace Ahenk;
+namespace Faemyr;
 public sealed class GainCacheEntry
 {
  public int Version{get;set;}=1;public string Key{get;set;}="";public double GainDb{get;set;}public double Peak{get;set;}

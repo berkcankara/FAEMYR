@@ -6,7 +6,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Microsoft.Win32;
 
-namespace Ahenk;
+namespace Faemyr;
 public partial class MainWindow
 {
  PlaylistStore playlists=null!;string playlistId="",artistName="",nextVisual="";
@@ -14,7 +14,8 @@ public partial class MainWindow
  void InitializeCollections()
  {
   try{playlists=new PlaylistStore(Paths.Data);}catch(Exception ex)when(ex is IOException or JsonException or UnauthorizedAccessException){playlists=new PlaylistStore(Path.Combine(Paths.Data,"recovery"));Status.Text=L.T("Çalma listeleri okunamadı. Mevcut dosya korundu: ")+ex.Message;}
-  Tracks.ContextMenu=new ContextMenu();Tracks.ContextMenuOpening+=(_,_)=>BuildTrackMenu();
+  Tracks.GroupStyle.Add((GroupStyle)FindResource("AlbumDiscGroupStyle"));VirtualizingPanel.SetIsVirtualizingWhenGrouping(Tracks,true);
+  Tracks.ContextMenu=new ContextMenu();Tracks.ContextMenuOpening+=(_,e)=>{if(e.CursorLeft>=0&&e.OriginalSource is DependencyObject source&&ItemsControl.ContainerFromElement(Tracks,source) is not DataGridRow){e.Handled=true;return;}BuildTrackMenu();};
   Tracks.PreviewMouseRightButtonDown+=(_,e)=>{if(e.OriginalSource is DependencyObject source&&ItemsControl.ContainerFromElement(Tracks,source) is DataGridRow row&&!row.IsSelected)Tracks.SelectedItem=row.Item;};
   Seek.LostMouseCapture+=(_,_)=>{if(dragging){CommitSeek();dragging=false;}};
   Seek.PreviewMouseMove+=(_,e)=>{if(dragging&&e.LeftButton==System.Windows.Input.MouseButtonState.Pressed){MoveSeek(e.GetPosition(Seek).X);e.Handled=true;}};
@@ -37,7 +38,7 @@ public partial class MainWindow
   if(MessageBox.Show(this,L.T($"“{p.Name}” çalma listesi silinsin mi? Müzik dosyaların korunur."),L.T("Çalma listesini sil"),MessageBoxButton.YesNo,MessageBoxImage.Question)!=MessageBoxResult.Yes)return;
   playlists.Items.Remove(p);SavePlaylists();view="playlists";RefreshView();
  }
- void SavePlaylists(){try{playlists.Save();}catch(Exception ex)when(ex is IOException or UnauthorizedAccessException){MessageBox.Show(this,L.T("Çalma listesi kaydedilemedi: ")+ex.Message,"Lyra");}}
+ void SavePlaylists(){try{playlists.Save();}catch(Exception ex)when(ex is IOException or UnauthorizedAccessException){MessageBox.Show(this,L.T("Çalma listesi kaydedilemedi: ")+ex.Message,"Faemyr");}}
  void BuildTrackMenu()
  {
   var menu=Tracks.ContextMenu;menu.Items.Clear();if(Tracks.SelectedItem is not Track t)return;
@@ -81,7 +82,7 @@ public partial class MainWindow
     if(initial!=null&&!draft.Tracks.Contains(initial.Path,StringComparer.OrdinalIgnoreCase))draft.Tracks.Add(initial.Path);
     SavePlaylistDraft(draft,existing);
     playlistId=draft.Id;view="playlist";Search.Text="";RefreshView();dialog.DialogResult=true;
-   }catch(Exception ex)when(ex is IOException or UnauthorizedAccessException or NotSupportedException){MessageBox.Show(dialog,L.T("Liste kaydedilemedi: ")+ex.Message,"Lyra");}
+   }catch(Exception ex)when(ex is IOException or UnauthorizedAccessException or NotSupportedException){MessageBox.Show(dialog,L.T("Liste kaydedilemedi: ")+ex.Message,"Faemyr");}
   };
   dialog.Loaded+=(_,_)=>name.Focus();dialog.ShowDialog();
  }
@@ -96,7 +97,7 @@ public partial class MainWindow
  {
   if(CurrentPlaylist is not {} p)return;var songs=PlaylistStore.Resolve(p,library,listening);HeroKind.Text=L.T("ÇALMA LİSTESİ");AlbumName.Text=p.Name;AlbumSummary.Names=AlbumSummary.Suffix="";AlbumSummary.Text=(p.Description.Length>0?p.Description+"\n":"")+L.T($"{songs.Count} parça · {(int)TimeSpan.FromSeconds(songs.Sum(t=>t.Seconds)).TotalMinutes} dk.")+(songs.Count<p.Tracks.Count?L.T($" · {p.Tracks.Count-songs.Count} parça arşivde bulunamadı"):"");
   AlbumArtwork.Source=CoverImage(p.Cover);HeroFallback.Visibility=AlbumArtwork.Source==null?Visibility.Visible:Visibility.Collapsed;AlbumCoverBox.Background=new SolidColorBrush((Color)ColorConverter.ConvertFromString(p.Color));
-  AmbientCover.Source=AlbumArtwork.Source;PaletteGradient.Background=new LinearGradientBrush((Color)ColorConverter.ConvertFromString(p.Color),((SolidColorBrush)FindResource("Canvas")).Color,60);renderedAlbum="";
+  renderedAlbum="";
  }
  void UpdateNextTrack()
  {

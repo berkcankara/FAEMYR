@@ -7,7 +7,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
 using System.Windows.Shapes;
 using System.Windows.Shell;
-namespace Ahenk;
+namespace Faemyr;
 public sealed class MiniPlayerWindow : Window
 {
  readonly ThumbnailImage cover=new(){Width=76,Height=76,Radius=10,Stretch=Stretch.UniformToFill};
@@ -26,7 +26,7 @@ public sealed class MiniPlayerWindow : Window
  public MiniPlayerWindow(Func<DesktopMediaAction,Task> action,Action restore,Action<bool> pin,Action<double> seekTo,Action<double> changeVolume,Action toggleMute)
  {
   this.seekTo=seekTo;this.changeVolume=changeVolume;this.toggleMute=toggleMute;
-  SetResourceReference(FontFamilyProperty,"UiFontFamily");Title="Lyra — "+L.T("Mini oynatıcı");Width=430;Height=196;MinWidth=350;MinHeight=190;MaxWidth=1000;MaxHeight=1000;WindowStyle=WindowStyle.None;ResizeMode=ResizeMode.NoResize;AllowsTransparency=true;Background=Brushes.Transparent;ShowInTaskbar=true;
+  SetResourceReference(FontFamilyProperty,"UiFontFamily");Title="Faemyr — "+L.T("Mini oynatıcı");Width=430;Height=196;MinWidth=350;MinHeight=190;MaxWidth=1000;MaxHeight=1000;WindowStyle=WindowStyle.None;ResizeMode=ResizeMode.NoResize;AllowsTransparency=true;Background=Brushes.Transparent;ShowInTaskbar=true;
   var shell=new Border{CornerRadius=new CornerRadius(16),BorderThickness=new Thickness(1)};shell.SetResourceReference(Border.BackgroundProperty,"Surface");shell.SetResourceReference(Border.BorderBrushProperty,"Line");Content=shell;
   root=new Grid{ClipToBounds=true};RoundedClip.SetRadius(root,15);shell.Child=root;largeCover.Visibility=Visibility.Collapsed;root.Children.Add(largeCover);
   root.SizeChanged+=(_,_)=>UpdateFrostedBackdrop();
@@ -114,6 +114,6 @@ public sealed class MiniPlayerWindow : Window
  }
  public void Sync(Track? track,bool playing,TimeSpan position,TimeSpan duration,double level,bool muted,bool dop)
  {
-  updating=true;try{title.Text=track?.Title??L.T("Henüz çalan parça yok");title.ToolTip=title.Text;Artist.Names=track?.Artist??"";cover.Path=artwork=track?.Cover;largeCover.Path=ArtworkExpanded?artwork:null;playIcon.Icon=playing?"pause":"play";taskPlay.ImageSource=SvgIcon.ShellImage(playIcon.Icon);Title="Lyra — "+(track?.Title??L.T("Mini oynatıcı"));if(!seeking){seek.Maximum=Math.Max(1,duration.TotalSeconds);seek.Value=Math.Clamp(position.TotalSeconds,0,seek.Maximum);}seek.IsEnabled=track!=null;volume.IsEnabled=mute.IsEnabled=!dop;volume.Value=level*100;volumeIcon.Icon=muted||level==0?"muted":"volume";}finally{updating=false;}
+  updating=true;try{title.Text=track?.Title??L.T("Henüz çalan parça yok");title.ToolTip=title.Text;Artist.Names=track?.Artist??"";cover.Path=artwork=track?.Cover;largeCover.Path=ArtworkExpanded?artwork:null;playIcon.Icon=playing?"pause":"play";taskPlay.ImageSource=SvgIcon.ShellImage(playIcon.Icon);Title="Faemyr — "+(track?.Title??L.T("Mini oynatıcı"));if(!seeking){seek.Maximum=Math.Max(1,duration.TotalSeconds);seek.Value=Math.Clamp(position.TotalSeconds,0,seek.Maximum);}seek.IsEnabled=track!=null;volume.IsEnabled=mute.IsEnabled=!dop;volume.Value=level*100;volumeIcon.Icon=muted||level==0?"muted":"volume";}finally{updating=false;}
  }
 }

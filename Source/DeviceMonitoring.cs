@@ -1,5 +1,5 @@
 using System.Windows.Threading;
-namespace Ahenk;
+namespace Faemyr;
 public partial class MainWindow
 {
  readonly DispatcherTimer deviceMonitor=new(){Interval=TimeSpan.FromSeconds(4)};bool checkingDevices;

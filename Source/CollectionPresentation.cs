@@ -1,5 +1,5 @@
 using System.Windows.Automation;
-namespace Ahenk;
+namespace Faemyr;
 public partial class MainWindow
 {
  void UpdateSearchPrompt()

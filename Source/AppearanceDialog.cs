@@ -3,7 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace Ahenk;
+namespace Faemyr;
 public partial class MainWindow
 {
  Action? appearanceEditorRefresh;
@@ -16,9 +16,11 @@ public partial class MainWindow
   var intro=new TextBlock{Text=L.T("Değişiklikleri anında gör. Kaydettiğinde sonraki açılışta da hatırlanır."),TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,9,0,20),FontSize=13};intro.SetResourceReference(TextBlock.ForegroundProperty,"Muted");content.Children.Add(intro);
   content.Children.Add(new TextBlock{Text=L.T("Tema"),FontSize=13,Margin=new Thickness(0,0,0,5)});
   var theme=new ComboBox{ItemsSource=Themes.Choices,DisplayMemberPath="Name",SelectedValuePath="Id",SelectedValue=Themes.Current,Margin=new Thickness(0,0,0,18)};System.Windows.Automation.AutomationProperties.SetName(theme,L.T("Tema"));content.Children.Add(theme);
+  var moduleTransparency=new CheckBox{Content=L.T("Modül saydamlığı"),IsChecked=draft.ModuleTransparency,Style=(Style)FindResource("AppearanceSwitch"),FontSize=14,FontWeight=FontWeights.SemiBold};System.Windows.Automation.AutomationProperties.SetName(moduleTransparency,L.T("Modül saydamlığı"));content.Children.Add(moduleTransparency);
+  var moduleHint=new TextBlock{Text=L.T("Yan paneller ve oynatıcı kutuları, bulanık albüm arka planını hafifçe geçirir."),TextWrapping=TextWrapping.Wrap,FontSize=12,Margin=new Thickness(0,4,0,18)};moduleHint.SetResourceReference(TextBlock.ForegroundProperty,"Muted");content.Children.Add(moduleHint);
   content.Children.Add(new TextBlock{Text=L.T("Dil"),FontSize=13});
   var language=new ComboBox{ItemsSource=new[]{new ThemeChoice("tr",L.T("Türkçe")),new ThemeChoice("en",L.T("English"))},DisplayMemberPath="Name",SelectedValuePath="Id",SelectedValue=L.ReadLanguage()};System.Windows.Automation.AutomationProperties.SetName(language,"Language");content.Children.Add(language);
-  var languageHint=new TextBlock{Text=L.T("Dil değişikliği Lyra yeniden açıldığında uygulanır."),TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,0,0,18)};languageHint.SetResourceReference(TextBlock.ForegroundProperty,"Muted");content.Children.Add(languageHint);
+  var languageHint=new TextBlock{Text=L.T("Dil değişikliği Faemyr yeniden açıldığında uygulanır."),TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,0,0,18)};languageHint.SetResourceReference(TextBlock.ForegroundProperty,"Muted");content.Children.Add(languageHint);
   var preview=new Border{CornerRadius=new CornerRadius(16),Padding=new Thickness(18),Margin=new Thickness(0,0,0,20)};preview.SetResourceReference(Border.BackgroundProperty,"Surface");var previewRow=new StackPanel{Orientation=Orientation.Horizontal};preview.Child=previewRow;content.Children.Add(preview);
   var previewPlay=new Border{Width=48,Height=48,CornerRadius=new CornerRadius(24),Margin=new Thickness(0,0,16,0)};previewPlay.SetResourceReference(Border.BackgroundProperty,"Accent");var icon=new SvgIcon{Icon="play",Width=23,Height=23};icon.SetResourceReference(SvgIcon.BrushProperty,"OnAccent");previewPlay.Child=icon;previewRow.Children.Add(previewPlay);
   var previewText=new StackPanel{VerticalAlignment=VerticalAlignment.Center};previewRow.Children.Add(previewText);var playing=new TextBlock{Text=L.T("Çalan parça"),FontSize=19,FontWeight=FontWeights.SemiBold};playing.SetResourceReference(TextBlock.ForegroundProperty,"PlayingAccent");previewText.Children.Add(playing);var caption=new TextBlock{Text=L.T("Oynatma düğmesi ve parça vurgusu"),FontSize=12,Margin=new Thickness(0,5,0,0)};caption.SetResourceReference(TextBlock.ForegroundProperty,"Muted");previewText.Children.Add(caption);
@@ -43,7 +45,7 @@ public partial class MainWindow
   var footer=new DockPanel{Margin=new Thickness(0,20,0,0)};Grid.SetRow(footer,1);root.Children.Add(footer);var reset=new Button{Content=L.T("Tümünü sıfırla"),Padding=new Thickness(12,10,12,10)};DockPanel.SetDock(reset,Dock.Left);footer.Children.Add(reset);
   string Role()=>((ColorRole)target.SelectedItem).Key;
   string CurrentHex(){if(target.SelectedIndex==0)return draft.Accent??Themes.DefaultAccent;if(target.SelectedIndex==1)return draft.PlayingColor??draft.Accent??Themes.DefaultAccent;if(draft.Colors.TryGetValue(Role(),out string? value))return value;var color=((SolidColorBrush)FindResource(Role())).Color;return $"#{color.R:X2}{color.G:X2}{color.B:X2}";}
-  void Apply(){Themes.Appearance=draft;Themes.ApplyAppearance();UpdateAccentControls();opacityNumber.Text=$"%{draft.ListOpacity:0}";blurNumber.Text=$"{draft.BlurRadius:0} px";if(libraryReady&&view=="album"){renderedAlbum="";RenderAlbum();}}
+  void Apply(){Themes.Appearance=draft;Themes.ApplyAppearance();UpdateAccentControls();opacityNumber.Text=$"%{draft.ListOpacity:0}";blurNumber.Text=$"%{draft.BlurRadius:0} px";UpdatePageBackdrop();}
   void Sync()
   {
    updating=true;string value=CurrentHex();var c=(Color)ColorConverter.ConvertFromString(value);hex.Text=value;swatch.Background=new SolidColorBrush(c);byte[] rgb=[c.R,c.G,c.B];for(int i=0;i<3;i++){channels[i].Value=rgb[i];channelLabels[i].Text=rgb[i].ToString();}follows.Visibility=target.SelectedIndex==1?Visibility.Visible:Visibility.Collapsed;follows.IsChecked=draft.PlayingColor==null;error.Visibility=Visibility.Collapsed;setValid(true);updating=false;
@@ -55,9 +57,11 @@ public partial class MainWindow
   target.SelectionChanged+=(_,_)=>Sync();follows.Checked+=(_,_)=>{if(updating)return;draft.PlayingColor=null;Apply();Sync();};follows.Unchecked+=(_,_)=>{if(updating)return;draft.PlayingColor=draft.Accent??Themes.DefaultAccent;Apply();Sync();};
   themeColor.Click+=(_,_)=>{if(target.SelectedIndex==1)draft.PlayingColor=null;else if(target.SelectedIndex==0)draft.Accent=null;else draft.Colors.Remove(Role());Apply();Sync();};
   opacity.ValueChanged+=(_,_)=>{if(updating)return;draft.ListOpacity=opacity.Value;Apply();};blur.ValueChanged+=(_,_)=>{if(updating)return;draft.BlurRadius=blur.Value;Apply();};
-  reset.Click+=(_,_)=>{draft=new();updating=true;opacity.Value=draft.ListOpacity;blur.Value=draft.BlurRadius;updating=false;Apply();Sync();};
+  moduleTransparency.Checked+=(_,_)=>ChangeModuleTransparency(true);moduleTransparency.Unchecked+=(_,_)=>ChangeModuleTransparency(false);
+  void ChangeModuleTransparency(bool value){if(updating)return;draft.ModuleTransparency=value;Apply();}
+  reset.Click+=(_,_)=>{draft=new();updating=true;opacity.Value=draft.ListOpacity;blur.Value=draft.BlurRadius;moduleTransparency.IsChecked=draft.ModuleTransparency;updating=false;Apply();Sync();};
   theme.SelectionChanged+=(_,_)=>{if(updating||theme.SelectedValue is not string id)return;Themes.Apply(id);ApplyInterfacePreferences();NativeAppearance.Apply(this);NativeAppearance.Apply(dialog);renderedAlbum="";RefreshView();UpdateAccentControls();Sync();};
-  appearanceEditorRefresh=()=>{updating=true;draft=Themes.Appearance;theme.SelectedValue=Themes.Current;opacity.Value=draft.ListOpacity;blur.Value=draft.BlurRadius;updating=false;Apply();Sync();};
+  appearanceEditorRefresh=()=>{updating=true;draft=Themes.Appearance;theme.SelectedValue=Themes.Current;opacity.Value=draft.ListOpacity;blur.Value=draft.BlurRadius;moduleTransparency.IsChecked=draft.ModuleTransparency;updating=false;Apply();Sync();};
   Apply();Sync();
   return new(root,()=>{draft.Save(Themes.AppearancePath);Themes.Save();L.Save(language.SelectedValue as string??"tr");},()=>{Themes.Appearance=original;Themes.Apply(originalTheme);NativeAppearance.Apply(this);renderedAlbum="";RefreshView();UpdateAccentControls();},()=>AppearancePreferences.NormalizeHex(hex.Text)!=null);
  }

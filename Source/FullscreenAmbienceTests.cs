@@ -1,4 +1,4 @@
-namespace Ahenk;
+namespace Faemyr;
 public static class FullscreenAmbienceTests
 {
  public static void Run(Action<bool,string> check)

@@ -6,7 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 
-namespace Ahenk;
+namespace Faemyr;
 public partial class MainWindow
 {
  LyricsService lyrics=null!;CancellationTokenSource? lyricsCts;long lyricsSelection;

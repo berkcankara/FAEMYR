@@ -1,7 +1,7 @@
 using System.IO;
 using System.Windows.Threading;
 
-namespace Ahenk;
+namespace Faemyr;
 public partial class MainWindow
 {
  readonly List<FileSystemWatcher> folderWatchers=[];

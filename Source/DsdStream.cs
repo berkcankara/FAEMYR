@@ -3,7 +3,7 @@ using System.IO;
 using System.Text;
 using NAudio.Wave;
 
-namespace Ahenk;
+namespace Faemyr;
 public sealed record DsdInfo(int Rate,int Channels,long Samples,long DataStart,long DataLength,int BlockSize,bool LeastBitFirst,bool Planar)
 {
  public int CarrierRate=>Rate/16;

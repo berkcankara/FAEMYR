@@ -4,7 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 
-namespace Ahenk;
+namespace Faemyr;
 public static class SmoothScroll
 {
  public static readonly DependencyProperty EnabledProperty=DependencyProperty.RegisterAttached("Enabled",typeof(bool),typeof(SmoothScroll),new PropertyMetadata(false,Changed));

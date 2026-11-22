@@ -7,7 +7,7 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shell;
-namespace Ahenk;
+namespace Faemyr;
 public partial class MainWindow
 {
  bool fullscreenPlayer,fullscreenLyrics=true;

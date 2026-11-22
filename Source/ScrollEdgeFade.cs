@@ -2,7 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-namespace Ahenk;
+namespace Faemyr;
 public static class ScrollEdgeFade
 {
  public static readonly DependencyProperty EnabledProperty=DependencyProperty.RegisterAttached("Enabled",typeof(bool),typeof(ScrollEdgeFade),new PropertyMetadata(false,Changed));

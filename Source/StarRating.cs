@@ -3,7 +3,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 
-namespace Ahenk;
+namespace Faemyr;
 public sealed class RatingRequestedEventArgs(int rating):RoutedEventArgs(StarRating.RatingRequestedEvent){public int Rating{get;}=rating;}
 public sealed class StarRating : FrameworkElement
 {

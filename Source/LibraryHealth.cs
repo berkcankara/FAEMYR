@@ -1,7 +1,7 @@
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
-namespace Ahenk;
+namespace Faemyr;
 public static class LibraryFingerprint
 {
  public static string Read(string path)

@@ -5,7 +5,7 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Threading;
 
-namespace Ahenk;
+namespace Faemyr;
 // WPF reports native Explorer failures through its public Shell trace source.
 // Keep those failures observable instead of counting managed button objects as
 // proof that the thumbnail toolbar was installed by Windows.

@@ -1,6 +1,6 @@
 using System.IO;
 using System.Text.RegularExpressions;
-namespace Ahenk;
+namespace Faemyr;
 public static class AlbumGrouping
 {
  static string Tag(Track t,params string[] names)=>t.Fields.FirstOrDefault(f=>names.Contains(ReplayGain.Tag(f.Key),StringComparer.OrdinalIgnoreCase))?.Value.Trim()??"";

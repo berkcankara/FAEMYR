@@ -9,7 +9,7 @@ using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace Ahenk;
+namespace Faemyr;
 public sealed class PanelPreferences
 {
  public double Width {get;set;}=364;
@@ -89,7 +89,7 @@ public partial class MainWindow
  void ShowTrackDetails(Track t)
  {
   bitrates?.Enqueue(t);
-  bool changed=inspectedTrack?.Path!=t.Path;inspectedTrack=t;DetailTitle.Text=t.Title;DetailArtist.Names=t.Artist;DetailQuality.Text=t.Quality;
+  bool changed=inspectedTrack?.Path!=t.Path;inspectedTrack=t;DetailTitle.Text=t.Title;DetailArtist.Names=t.Artist;DetailQuality.Text=t.Quality;DetailAlbumLink.IsEnabled=true;DetailAlbumLink.Tag=t;DetailAlbumLink.ToolTip=L.T("Albümü aç");
   string coverPath=File.Exists(t.Cover)?t.Cover:library.FirstOrDefault(row=>row.AlbumKey==t.AlbumKey&&File.Exists(row.Cover))?.Cover??"";
   if(panelCoverPath!=coverPath)
   {
@@ -97,7 +97,7 @@ public partial class MainWindow
    if(File.Exists(coverPath))try{var image=new BitmapImage();image.BeginInit();image.CacheOption=BitmapCacheOption.OnLoad;image.DecodePixelWidth=720;image.UriSource=new Uri(coverPath);image.EndInit();image.Freeze();PanelCover.Background=new ImageBrush(image){Stretch=Stretch.UniformToFill};CoverFallback.Visibility=Visibility.Collapsed;}
    catch(Exception ex)when(ex is IOException or NotSupportedException or ArgumentException or FormatException){panelCoverPath="";}
   }
-  ApplyPanelVisibility();SelectLyricsTrack(t);UpdateTopBarState();if(fullscreenPlayer)UpdateFullscreenLayout();if(changed)DetailScroll.ScrollToTop();
+  ApplyPanelVisibility();SelectLyricsTrack(t);UpdateTopBarState();if(view is "albums" or "artists")UpdatePageBackdrop();if(fullscreenPlayer)UpdateFullscreenLayout();if(changed)DetailScroll.ScrollToTop();
  }
  void CustomizePanel()=>OpenSettings("panel");
  SettingsSection BuildPanelSettings(Window dialog)

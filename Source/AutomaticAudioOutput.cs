@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using NAudio.CoreAudioApi;
 using NAudio.Wave;
-namespace Ahenk;
+namespace Faemyr;
 
 public sealed record AutomaticOutputPlan(bool Exclusive,WaveFormat Format,string Reason);
 public static class AutomaticAudioOutput

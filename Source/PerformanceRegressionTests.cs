@@ -5,7 +5,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Microsoft.Data.Sqlite;
 
-namespace Ahenk;
+namespace Faemyr;
 public static class PerformanceRegressionTests
 {
  public static async Task Run(string directory,Action<bool,string> check)

@@ -5,7 +5,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Diagnostics;
 using NAudio.Wave;
-namespace Ahenk;
+namespace Faemyr;
 public static class VisualizerUiTests
 {
  static T Field<T>(object owner,string name)=>(T)owner.GetType().GetField(name,BindingFlags.NonPublic|BindingFlags.Instance)!.GetValue(owner)!;
@@ -16,7 +16,7 @@ public static class VisualizerUiTests
   Application.Current.ShutdownMode=ShutdownMode.OnExplicitShutdown;Themes.Load();MainWindow? window=null;
   try
   {
-   string path=Path.Combine(directory,"visualizer-silence.wav");var format=new WaveFormat(44100,16,2);using(var writer=new WaveFileWriter(path,format))writer.Write(new byte[format.AverageBytesPerSecond*30],0,format.AverageBytesPerSecond*30);var track=await MetadataReader.Read(path,default);track.Title="Visualizer sessiz test";track.Artist=track.AlbumArtist="Lyra test";
+   string path=Path.Combine(directory,"visualizer-silence.wav");var format=new WaveFormat(44100,16,2);using(var writer=new WaveFileWriter(path,format))writer.Write(new byte[format.AverageBytesPerSecond*30],0,format.AverageBytesPerSecond*30);var track=await MetadataReader.Read(path,default);track.Title="Visualizer sessiz test";track.Artist=track.AlbumArtist="Faemyr test";
    using(var db=new LibraryStore())db.Save(track);new AudioPreferences{Exclusive=false}.Save(Path.Combine(Paths.Data,"audio-settings.json"));PlayerJson.Write(Path.Combine(Paths.Data,"player-settings.json"),new PlayerPreferences{Volume=1,AutoPlayOnStartup=false});
    window=new MainWindow{ShowInTaskbar=false};window.Show();await Wait(()=>Field<bool>(window,"libraryReady")&&Field<bool>(window,"sessionReady"));typeof(MainWindow).GetField("view",BindingFlags.NonPublic|BindingFlags.Instance)!.SetValue(window,"tracks");typeof(MainWindow).GetMethod("RefreshView",BindingFlags.NonPublic|BindingFlags.Instance)!.Invoke(window,null);var liveTrack=Field<List<Track>>(window,"library").Single();await (Task)typeof(MainWindow).GetMethod("StartFromView",BindingFlags.NonPublic|BindingFlags.Instance)!.Invoke(window,[liveTrack])!;
    var audio=Field<AudioEngine>(window,"audio");var view=Field<OscilloscopeView>(window,"Scope");await Wait(()=>audio.DeviceStarted&&view.Running&&Field<int>(view,"count")>0);

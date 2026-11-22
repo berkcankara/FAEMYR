@@ -3,7 +3,7 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Threading;
 
-namespace Ahenk;
+namespace Faemyr;
 public partial class MainWindow
 {
  bool libraryReady;
@@ -56,7 +56,7 @@ public partial class MainWindow
    if(closed)return;
    StartupMetrics.Fail(ex);if(StartupMetrics.Enabled){Close();return;}
    LibraryStats.Text=L.T("Arşiv açılamadı.");Status.Text=ex.Message;
-   MessageBox.Show(this,L.T("Arşiv okunamadı. Müzik dosyaların korunuyor.\n")+ex.Message,"Lyra",MessageBoxButton.OK,MessageBoxImage.Information);
+   MessageBox.Show(this,L.T("Arşiv okunamadı. Müzik dosyaların korunuyor.\n")+ex.Message,"Faemyr",MessageBoxButton.OK,MessageBoxImage.Information);
   }
  }
  async Task RefreshDevicesAsync()

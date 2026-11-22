@@ -5,7 +5,7 @@ using System.Windows.Media;
 using System.Windows.Shell;
 using System.Windows.Threading;
 
-namespace Ahenk;
+namespace Faemyr;
 public static class NativeAppearance
 {
  [DllImport("dwmapi.dll")] static extern int DwmSetWindowAttribute(IntPtr window,int attribute,ref int value,int size);

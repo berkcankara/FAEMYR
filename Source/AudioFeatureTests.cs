@@ -6,7 +6,7 @@ using System.Text.Json;
 using NAudio.CoreAudioApi;
 using NAudio.Wave;
 
-namespace Ahenk;
+namespace Faemyr;
 public static class AudioFeatureTests
 {
  static byte[] ReadAll(IWaveProvider source,int frames=517){using var data=new MemoryStream();byte[] b=new byte[source.WaveFormat.BlockAlign*frames];int n;while((n=source.Read(b,0,b.Length))>0)data.Write(b,0,n);return data.ToArray();}

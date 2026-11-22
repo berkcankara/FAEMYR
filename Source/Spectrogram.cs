@@ -1,7 +1,7 @@
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-namespace Ahenk;
+namespace Faemyr;
 
 // A fixed ten-second history follows the consumed PCM clock, never UI wall time.
 // Low-to-high logarithmic frequency bands are stored oldest-to-newest by column.

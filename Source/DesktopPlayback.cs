@@ -4,7 +4,7 @@ using System.Windows.Interop;
 using System.Windows.Shell;
 using System.Windows.Threading;
 
-namespace Ahenk;
+namespace Faemyr;
 public enum DesktopMediaAction{None,Toggle,Play,Pause,Previous,Next,Stop,Shuffle,Repeat}
 public static class DesktopMediaKeys
 {
@@ -32,14 +32,14 @@ public partial class MainWindow
   thumbnailPrevious=new(){Description=L.T("Önceki parça"),ImageSource=SvgIcon.ShellImage("previous"),DismissWhenClicked=false};
   thumbnailPlay=new(){Description=L.T("Oynat"),ImageSource=SvgIcon.ShellImage("play"),DismissWhenClicked=false};
   thumbnailNext=new(){Description=L.T("Sonraki parça"),ImageSource=SvgIcon.ShellImage("next"),DismissWhenClicked=false};
-  TaskbarItemInfo=new(){Description="Lyra",ThumbButtonInfos=new(){thumbnailPrevious,thumbnailPlay,thumbnailNext}};
+  TaskbarItemInfo=new(){Description="Faemyr",ThumbButtonInfos=new(){thumbnailPrevious,thumbnailPlay,thumbnailNext}};
   thumbnailPrevious.Click+=(_,_)=>QueueDesktopAction(DesktopMediaAction.Previous);thumbnailPlay.Click+=(_,_)=>QueueDesktopAction(DesktopMediaAction.Toggle);thumbnailNext.Click+=(_,_)=>QueueDesktopAction(DesktopMediaAction.Next);
   SourceInitialized+=(_,_)=>
   {
    mediaSource=HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);if(mediaSource==null)return;mediaSource.AddHook(DesktopMediaMessage);
    if(InitializeWindowsMedia())return;
    for(int i=0;i<DesktopMediaKeys.Bindings.Length;i++)if(RegisterHotKey(mediaSource.Handle,DesktopMediaKeys.BaseId+i,0x4000,(uint)DesktopMediaKeys.Bindings[i].Key))mediaHotkeys.Add(DesktopMediaKeys.BaseId+i);else fallbackMediaKeys.Add(DesktopMediaKeys.Bindings[i].Key);
-   if(fallbackMediaKeys.Count>0){mediaKeyboardCallback=MediaKeyboardMessage;mediaKeyboardHook=SetWindowsHookEx(13,mediaKeyboardCallback,GetModuleHandle(null),0);if(mediaKeyboardHook==IntPtr.Zero)Status.Text=L.T("Bazı multimedya tuşları başka bir uygulama tarafından kullanılıyor; Lyra odaktayken de kullanılabilir.");}
+   if(fallbackMediaKeys.Count>0){mediaKeyboardCallback=MediaKeyboardMessage;mediaKeyboardHook=SetWindowsHookEx(13,mediaKeyboardCallback,GetModuleHandle(null),0);if(mediaKeyboardHook==IntPtr.Zero)Status.Text=L.T("Bazı multimedya tuşları başka bir uygulama tarafından kullanılıyor; Faemyr odaktayken de kullanılabilir.");}
   };
   Closing+=(_,_)=>CloseDesktopPlayback();UpdateDesktopPlayback();
  }
@@ -106,7 +106,7 @@ public partial class MainWindow
   bool canPlay=ready&&!busy&&(playing||audio.IsPaused||now!=null||queue.Count>0||Tracks.Visibility==Visibility.Visible&&Tracks.Items.Count>0);
   bool canPrevious=ready&&!busy&&(playing||audio.IsPaused||queueIndex>=0);
   bool canNext=ready&&!busy&&queueIndex>=0&&order.Peek(queue.Count,queueIndex,false)>=0;
-  string description=now==null?"Lyra":$"{now.Title} — {now.Artist}\n{(playing?L.T("Çalıyor"):audio.IsPaused?L.T("Duraklatıldı"):L.T("Durduruldu"))} · Lyra";
+  string description=now==null?"Faemyr":$"{now.Title} — {now.Artist}\n{(playing?L.T("Çalıyor"):audio.IsPaused?L.T("Duraklatıldı"):L.T("Durduruldu"))} · Faemyr";
   windowsMedia?.Update(now,playing,audio.IsPaused,ready,canPlay,canPrevious,canNext,PlayerPosition,PlayerDuration);
   string state=$"{playing}|{canPlay}|{canPrevious}|{canNext}|{description}";if(desktopState==state)return;desktopState=state;
   thumbnailPlay.Description=playing?L.T("Duraklat"):L.T("Oynat");thumbnailPlay.ImageSource=SvgIcon.ShellImage(playing?"pause":"play");thumbnailPlay.IsEnabled=canPlay;thumbnailPrevious!.IsEnabled=canPrevious;thumbnailNext!.IsEnabled=canNext;TaskbarItemInfo.Description=description;

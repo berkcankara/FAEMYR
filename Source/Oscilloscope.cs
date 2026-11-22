@@ -3,7 +3,7 @@ using System.Windows;
 using System.Windows.Media;
 using NAudio.Wave;
 
-namespace Ahenk;
+namespace Faemyr;
 
 // Observes PCM returned to WASAPI. Audio bytes are never edited or replaced.
 public sealed class ScopeCapture

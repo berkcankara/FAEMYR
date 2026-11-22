@@ -4,7 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using NAudio.CoreAudioApi;
 
-namespace Ahenk;
+namespace Faemyr;
 public partial class MainWindow
 {
  AudioPreferences audioPreferences=new();ReplayGainStore gainStore=null!;CancellationTokenSource? gainScan;bool updatingAudioChoices;
@@ -28,7 +28,7 @@ public partial class MainWindow
   var draft=audioPreferences.Copy();var stack=new StackPanel();var scroll=new ScrollViewer{Content=stack,VerticalScrollBarVisibility=ScrollBarVisibility.Auto};
   void Text(string text,bool heading=false){var label=new TextBlock{Text=text,TextWrapping=TextWrapping.Wrap,FontSize=heading?19:12,FontWeight=heading?FontWeights.SemiBold:FontWeights.Normal,Margin=new Thickness(0,heading?18:6,0,8)};label.SetResourceReference(TextBlock.ForegroundProperty,heading?"Ink":"Muted");stack.Children.Add(label);}
   Text(L.T("Başlangıç ve oturum"),true);var autoPlay=new CheckBox{Content=L.T("Açılışta son parçayı kaldığı yerden otomatik oynat"),IsChecked=playerPreferences.AutoPlayOnStartup,Margin=new Thickness(0,6,0,8)};autoPlay.SetResourceReference(Control.ForegroundProperty,"Ink");stack.Children.Add(autoPlay);
-  Text(L.T("Son parça, konum, çalma kuyruğu ve açık sayfa otomatik hatırlanır. Bu seçenek kapalıyken Lyra ses başlatmadan bekler. Ses seviyesi ve sessiz durumu da korunur."));
+  Text(L.T("Son parça, konum, çalma kuyruğu ve açık sayfa otomatik hatırlanır. Bu seçenek kapalıyken Faemyr ses başlatmadan bekler. Ses seviyesi ve sessiz durumu da korunur."));
   var gapless=new CheckBox{Content=L.T("Uyumlu parçalar arasında kesintisiz geçiş"),IsChecked=playbackPreferences.Gapless,Margin=new Thickness(0,12,0,6)};gapless.SetResourceReference(Control.ForegroundProperty,"Ink");stack.Children.Add(gapless);Text(L.T("Sıradaki parça önceden hazırlanır. Örnekleme oranı, kanal sayısı ve işleme biçimi aynıysa çıkış açık tutularak birleştirilir. Biçim değişiyorsa aygıt özgün biçimde yeniden açılır. DoP ayrı çıkış yolunu kullanır. Değişiklik sonraki başlatmada uygulanır."));Text(L.T("Ses çıkışı"),true);Text(L.T("Değişiklikler sonraki parçada uygulanır. FLAC, ALAC, WAV ve AIFF özgün PCM çözünürlüğünde çözülür."));
   var devices=new ComboBox{DisplayMemberPath="Name",ItemsSource=DeviceChoice.ItemsSource,ToolTip=L.T("Ses çıkış aygıtı")};devices.SelectedItem=devices.Items.Cast<DeviceOption>().FirstOrDefault(d=>d.Id==draft.DeviceId)??devices.Items[0];stack.Children.Add(devices);
   var automatic=new CheckBox{Content=L.T("Otomatik çıkış · en iyi uyumlu ses biçimini seç"),IsChecked=draft.AutomaticOutput,Margin=new Thickness(0,12,0,6)};System.Windows.Automation.AutomationProperties.SetName(automatic,L.T("Otomatik ses çıkışı"));stack.Children.Add(automatic);
@@ -44,7 +44,7 @@ public partial class MainWindow
   rateLimit.SelectionChanged+=(_,_)=>{if(!loadingRate&&PcmDevice() is {} id){int limit=rateLimit.SelectedIndex switch{1=>96000,2=>48000,_=>0};if(limit==0)draft.PcmRateLimits.Remove(id);else draft.PcmRateLimits[id]=limit;}};devices.SelectionChanged+=(_,_)=>LoadRate();LoadRate();
   automatic.Checked+=(_,_)=>LoadRate();automatic.Unchecked+=(_,_)=>LoadRate();
   Text(L.T("Yalnızca seçili aygıtta, Exclusive PCM çıkışında uygulanır. Sınırın üzerindeki dosyalar yüksek kaliteli yeniden örneklenir; bit-perfect olmaz. 16/44,1 gibi sınırın altındaki dosyalar özgün oranda kalır. Dosyalar, diğer aygıtlar ve DSD/DoP değişmez. Kaydet ve parçayı yeniden başlat."));
-  Text(L.T("Optik çıkışta Windows ses çubuğu Exclusive sesini değiştirmeyebilir. Soundbar / DAC üzerindeki ses kontrolünü veya Lyra'nın sesini kullan. Lyra sesini kısmak dijital örnekleri değiştirir; %100'de ses seviyesi işlemi atlanır."));
+  Text(L.T("Optik çıkışta Windows ses çubuğu Exclusive sesini değiştirmeyebilir. Soundbar / DAC üzerindeki ses kontrolünü veya Faemyr'in sesini kullan. Faemyr sesini kısmak dijital örnekleri değiştirir; %100'de ses seviyesi işlemi atlanır."));
   Text("ReplayGain",true);var mode=new ComboBox{ItemsSource=new[]{L.T("Kapalı · özgün örnekler"),L.T("Parça kazancı"),L.T("Albüm kazancı")},SelectedIndex=(int)draft.ReplayGain};System.Windows.Automation.AutomationProperties.SetName(mode,L.T("ReplayGain modu"));stack.Children.Add(mode);
   Text(L.T("Önce dosyadaki ReplayGain etiketi, yoksa yerel analiz kullanılır. Sabit kazanç dinamik sıkıştırma uygulamaz; açıkken örnek değerleri değişir. Albüm modu parçalar arasındaki seviye farklarını korur."));
   var preamp=new TextBox{Text=draft.PreampDb.ToString("0.##",CultureInfo.CurrentCulture),ToolTip=L.T("Ön kazanç (dB), −12 ile +12"),Margin=new Thickness(0,4,0,8)};Text(L.T("Ön kazanç (dB) · −12 ile +12"));stack.Children.Add(preamp);
@@ -74,11 +74,11 @@ public partial class MainWindow
  {
   if(gainScan!=null)return;using var cancellation=new CancellationTokenSource();gainScan=cancellation;
   var label=new TextBlock{Text=L.T("Analiz hazırlanıyor…"),TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,0,0,18)};var cancel=new Button{Content=L.T("İptal"),HorizontalAlignment=HorizontalAlignment.Right};var content=new StackPanel{Margin=new Thickness(24)};content.Children.Add(label);content.Children.Add(cancel);
-  var dialog=new Window{Title=L.T("Lyra — ReplayGain analizi"),Owner=this,Width=460,SizeToContent=SizeToContent.Height,ResizeMode=ResizeMode.NoResize,WindowStartupLocation=WindowStartupLocation.CenterOwner,Content=content};dialog.SetResourceReference(BackgroundProperty,"Canvas");dialog.SetResourceReference(ForegroundProperty,"Ink");
+  var dialog=new Window{Title=L.T("Faemyr — ReplayGain analizi"),Owner=this,Width=460,SizeToContent=SizeToContent.Height,ResizeMode=ResizeMode.NoResize,WindowStartupLocation=WindowStartupLocation.CenterOwner,Content=content};dialog.SetResourceReference(BackgroundProperty,"Canvas");dialog.SetResourceReference(ForegroundProperty,"Ink");
   cancel.Click+=(_,_)=>cancellation.Cancel();dialog.Closing+=(_,_)=>cancellation.Cancel();dialog.Show();
   try{await gainStore.AnalyzeAsync(tracks,album,new Progress<string>(text=>{if(!cancellation.IsCancellationRequested)label.Text=text;}),cancellation.Token);if(!closed)Status.Text=L.T("ReplayGain analizi kaydedildi. Dosyalar değiştirilmedi; sonraki oynatmada uygulanır.");}
   catch(OperationCanceledException){if(!closed)Status.Text=L.T("ReplayGain analizi iptal edildi.");}
-  catch(Exception ex){if(!closed){Status.Text=ex.Message;MessageBox.Show(this,ex.Message,L.T("Lyra — ReplayGain"),MessageBoxButton.OK,MessageBoxImage.Information);}}
+  catch(Exception ex){if(!closed){Status.Text=ex.Message;MessageBox.Show(this,ex.Message,L.T("Faemyr — ReplayGain"),MessageBoxButton.OK,MessageBoxImage.Information);}}
   finally{gainScan=null;dialog.Close();}
  }
 }

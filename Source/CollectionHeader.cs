@@ -1,12 +1,13 @@
 using System.Windows;
 using System.Windows.Controls;
 
-namespace Ahenk;
+namespace Faemyr;
 public partial class MainWindow
 {
  void UpdateCollectionHeaderLayout()
  {
   bool compact=view is "albums" or "artists";
+  AlbumGroupingButton.Visibility=Visible(view=="albums");
   if(compact)SectionTitle.Visibility=Visibility.Collapsed;
   CollectionToolbar.Visibility=Visible(!compact&&view is not "album" and not "playlist");
   // Reuse the existing selector so its selection and event handler remain the

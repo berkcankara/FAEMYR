@@ -6,7 +6,7 @@ using System.Windows.Input;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
 
-namespace Ahenk;
+namespace Faemyr;
 public partial class MainWindow
 {
  readonly DispatcherTimer topSearchDelay=new(){Interval=TimeSpan.FromMilliseconds(240)};

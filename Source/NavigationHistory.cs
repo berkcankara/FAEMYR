@@ -2,7 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
 
-namespace Ahenk;
+namespace Faemyr;
 public partial class MainWindow
 {
  sealed record NavigationPlace(string View,string Album,string Artist,string Playlist,string Tab,string Query)

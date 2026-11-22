@@ -5,7 +5,7 @@ using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
 using NAudio.Wave;
-namespace Ahenk;
+namespace Faemyr;
 public static class CollectionUiTests
 {
  static T Field<T>(MainWindow owner,string name)=>(T)typeof(MainWindow).GetField(name,BindingFlags.NonPublic|BindingFlags.Instance)!.GetValue(owner)!;

@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 
-namespace Ahenk;
+namespace Faemyr;
 // The Windows media flyout resolves unpackaged app branding through the
 // Start menu's shortcut catalog. Keep its automatic EXE identity so existing
 // taskbar pins continue to match, rather than changing the process AppUserModelID.
@@ -31,7 +31,7 @@ public static class DesktopApplicationRegistration
  [DllImport("shell32.dll",CharSet=CharSet.Unicode)] static extern void SHChangeNotify(uint change,uint flags,[MarshalAs(UnmanagedType.LPWStr)]string path,IntPtr other);
  public static Result RegisterCurrent()
  {
-  string executable=Environment.ProcessPath??Path.Combine(AppContext.BaseDirectory,"Lyra.exe");
+  string executable=Environment.ProcessPath??Path.Combine(AppContext.BaseDirectory,"Faemyr.exe");
   string programs=Environment.GetFolderPath(Environment.SpecialFolder.Programs);
   var result=Register(programs,executable,true);
   try{PlayerJson.Write(Path.Combine(Paths.Data,"windows-app-registration.json"),result);}catch(Exception ex)when(ex is IOException or UnauthorizedAccessException){}
@@ -43,7 +43,7 @@ public static class DesktopApplicationRegistration
   try
   {
    if(string.IsNullOrWhiteSpace(programs)||!Path.IsPathFullyQualified(programs)||!Path.IsPathFullyQualified(executable)||!File.Exists(executable))return new(false,false,shortcut,"The application or Programs folder is unavailable.");
-   executable=Path.GetFullPath(executable);string folder=Path.Combine(programs,"Lyra");shortcut=Path.Combine(folder,"Lyra.lnk");
+   executable=Path.GetFullPath(executable);string folder=Path.Combine(programs,"Faemyr");shortcut=Path.Combine(folder,"Faemyr.lnk");
    native=new ShellLinkObject();var link=(IShellLink)native;var persist=(IPersistFile)native;
    bool existed=File.Exists(shortcut);
    if(existed)
@@ -54,9 +54,9 @@ public static class DesktopApplicationRegistration
      link.GetPath(target,target.Capacity,IntPtr.Zero,4);link.GetIconLocation(icon,icon.Capacity,out int index);link.GetArguments(args,args.Capacity);
      if(target.ToString().Equals(executable,StringComparison.OrdinalIgnoreCase)&&icon.ToString().Equals(executable,StringComparison.OrdinalIgnoreCase)&&index==0&&args.Length==0)return new(true,false,shortcut);
     }
-    catch(COMException){/* Repair an incomplete shortcut in Lyra's own folder. */}
+    catch(COMException){/* Repair an incomplete shortcut in Faemyr's own folder. */}
    }
-   Directory.CreateDirectory(folder);link.SetPath(executable);link.SetArguments("");link.SetWorkingDirectory(Path.GetDirectoryName(executable)!);link.SetDescription("Lyra");link.SetIconLocation(executable,0);link.SetShowCmd(1);persist.Save(shortcut,true);
+   Directory.CreateDirectory(folder);link.SetPath(executable);link.SetArguments("");link.SetWorkingDirectory(Path.GetDirectoryName(executable)!);link.SetDescription("Faemyr");link.SetIconLocation(executable,0);link.SetShowCmd(1);persist.Save(shortcut,true);
    if(notify)SHChangeNotify(existed?0x00002000u:0x00000002u,0x0005,shortcut,IntPtr.Zero); // UPDATEITEM / CREATE, SHCNF_PATHW
    return new(true,true,shortcut);
   }

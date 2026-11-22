@@ -1,5 +1,5 @@
 using System.Windows;
-namespace Ahenk;
+namespace Faemyr;
 public static class FullscreenControlsAutoHideTests
 {
  public static void Run(Action<bool,string> check)

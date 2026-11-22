@@ -3,7 +3,7 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Media;
 
-namespace Ahenk;
+namespace Faemyr;
 public sealed record ThemeChoice(string Id,string Text){public string Name=>L.T(Text);}
 public static class Themes
 {
@@ -47,7 +47,11 @@ public static class Themes
   var captionSurface=((SolidColorBrush)Application.Current.Resources["WorkspaceSurface"]).Color;
   byte CaptionChannel(byte ink,byte surface)=>(byte)Math.Round(ink*.75+surface*.25);
   Set("CaptionInk",Color.FromRgb(CaptionChannel(captionInk.R,captionSurface.R),CaptionChannel(captionInk.G,captionSurface.G),CaptionChannel(captionInk.B,captionSurface.B)));
-  Set("NavigationSurface",Current=="oled"?Color.FromRgb(22,22,22):((SolidColorBrush)Application.Current.Resources["ControlSurface"]).Color);
+  // Navigation buttons need a little more separation from their surrounding
+  // panels, including when the OLED workspace is almost entirely black.
+  var controlColor=((SolidColorBrush)Application.Current.Resources["ControlSurface"]).Color;
+  byte NavigationChannel(byte control,byte ink)=>(byte)Math.Round(control*.94+ink*.06);
+  Set("NavigationSurface",Current=="oled"?Color.FromRgb(38,38,38):Color.FromRgb(NavigationChannel(controlColor.R,captionInk.R),NavigationChannel(controlColor.G,captionInk.G),NavigationChannel(controlColor.B,captionInk.B)));
   Set("Accent",accent);Set("PlayingAccent",playing);Set("OnAccent",Custom("OnAccent",AppearancePreferences.ForegroundOn(accent)));
   Color PanelFrame(string surfaceKey)
   {
@@ -58,6 +62,15 @@ public static class Themes
   }
   Set("SidebarFrameAccent",PanelFrame("SidebarSurface"));Set("DetailFrameAccent",PanelFrame("PanelSurface"));
   Set("PlayerFrameAccent",PanelFrame("Surface"));Set("ListFrameAccent",PanelFrame("GlassSurface"));
+  // The background is already blurred at the workspace level. Tint only the
+  // module surfaces so their contents and the softly fading rims remain opaque.
+  foreach(var (key,source,alpha) in new[]{("ModuleSidebarSurface","SidebarSurface",.75),("ModuleDetailSurface","PanelSurface",.75),("ModulePlayerSurface","Surface",.75),("ModuleLyricsSurface","LyricsSurface",.28),("ModuleUpNextSurface","UpNextSurface",.28)})
+  {
+   var original=(SolidColorBrush)Application.Current.Resources[source];
+   if(!Appearance.ModuleTransparency){Application.Current.Resources[key]=original;continue;}
+   // Nested cards sit on the sidebar tint; the combined opacity is about 82%.
+   var color=original.Color;color.A=(byte)Math.Round(255*alpha);Set(key,color);
+  }
   foreach(string key in new[]{"VisualizerAccent","LyricsAccent","RatingAccent"})Set(key,Custom(key,accent));
   var canvas=Custom("GlassSurface",((SolidColorBrush)Application.Current.Resources["Canvas"]).Color);canvas.A=(byte)Math.Round(Appearance.ListOpacity*255/100);Set("GlassSurface",canvas);Application.Current.Resources["ListBlurRadius"]=Appearance.BlurRadius;
  }

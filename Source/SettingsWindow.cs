@@ -3,7 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace Ahenk;
+namespace Faemyr;
 public sealed record SettingsSection(FrameworkElement View,Action Save,Action Cancel,Func<bool> IsValid);
 public partial class MainWindow
 {
@@ -12,7 +12,7 @@ public partial class MainWindow
  void OpenSettings(string section="appearance")
  {
   if(settingsWindow!=null){settingsWindow.Activate();return;}
-  var dialog=new Window{Title=L.T("Lyra — Ayarlar"),Owner=this,Width=960,Height=850,MinWidth=800,MinHeight=650,MaxHeight=SystemParameters.WorkArea.Height-24,WindowStartupLocation=WindowStartupLocation.CenterOwner};settingsWindow=dialog;
+  var dialog=new Window{Title=L.T("Faemyr — Ayarlar"),Owner=this,Width=960,Height=850,MinWidth=800,MinHeight=650,MaxHeight=SystemParameters.WorkArea.Height-24,WindowStartupLocation=WindowStartupLocation.CenterOwner};settingsWindow=dialog;
   var originalInterface=InterfaceSettings.Current.Copy();var originalVisualizer=Scope.Mode;interfaceEditorRefresh.Clear();interfaceEditorCleanup.Clear();
   dialog.SetResourceReference(BackgroundProperty,"Canvas");dialog.SetResourceReference(ForegroundProperty,"Ink");
   var root=new Grid{Margin=new Thickness(26)};root.RowDefinitions.Add(new(){Height=GridLength.Auto});root.RowDefinitions.Add(new(){Height=new GridLength(1,GridUnitType.Star)});root.RowDefinitions.Add(new(){Height=GridLength.Auto});dialog.Content=root;
@@ -24,11 +24,11 @@ public partial class MainWindow
   var appearance=BuildAppearanceSettings(dialog,valid=>save.IsEnabled=valid);var panel=BuildPanelSettings(dialog);var library=BuildLibrarySettings();UseLiveSettingsColors(panel.View);
   var photoSettings=BuildArtistPhotoSettings();var audioSettings=BuildAudioSettings(dialog);var lyricsSettings=BuildLyricsSettings();var layoutSettings=BuildInterfaceSettings("layout");var typeSettings=BuildInterfaceSettings("typography");var playerSettings=BuildInterfaceSettings("player");var desktopSettings=BuildDesktopPlayerSettings();var sections=new Dictionary<string,FrameworkElement>{{"appearance",appearance.View},{"layout",layoutSettings.View},{"typography",typeSettings.View},{"player",playerSettings.View},{"desktop",desktopSettings.View},{"profiles",BuildProfileSettings(dialog)},{"artistPhotos",photoSettings.View},{"panel",panel.View},{"lyrics",lyricsSettings.View},{"audio",audioSettings.View},{"library",library}};
   var buttons=new Dictionary<string,Button>();
-  void Select(string id){foreach(var pair in sections){bool selected=pair.Key==id;pair.Value.Visibility=Visible(selected);buttons[pair.Key].SetResourceReference(Control.BackgroundProperty,selected?"SelectedSurface":"Canvas");buttons[pair.Key].SetResourceReference(Control.ForegroundProperty,selected?"Accent":"Ink");}}
+  void Select(string id){foreach(var pair in sections){bool selected=pair.Key==id;pair.Value.Visibility=Visible(selected);buttons[pair.Key].SetResourceReference(Control.BackgroundProperty,selected?"Accent":"NavigationSurface");buttons[pair.Key].SetResourceReference(Control.ForegroundProperty,selected?"OnAccent":"Ink");}}
   foreach(var pair in sections)
   {
    content.Children.Add(pair.Value);var button=new Button{Content=pair.Key switch{"appearance"=>L.T("Renkler"),"layout"=>L.T("Düzen"),"typography"=>L.T("Yazı ve kartlar"),"player"=>L.T("Oynatıcı"),"desktop"=>L.T("Masaüstü oynatıcı"),"profiles"=>L.T("Profiller"),"artistPhotos"=>L.T("Sanatçı görselleri"),"panel"=>L.T("Sağ panel"),"lyrics"=>L.T("Şarkı sözleri"),"audio"=>L.T("Ses"),_=>L.T("Müzik arşivi")},HorizontalContentAlignment=HorizontalAlignment.Left,Height=44,Margin=new Thickness(0,0,0,8)};
-   buttons[pair.Key]=button;navigation.Children.Add(button);string id=pair.Key;button.Click+=(_,_)=>Select(id);
+   System.Windows.Automation.AutomationProperties.SetAutomationId(button,"SettingsNav_"+pair.Key);buttons[pair.Key]=button;navigation.Children.Add(button);string id=pair.Key;button.Click+=(_,_)=>Select(id);
   }
   Select(sections.ContainsKey(section)?section:"appearance");UpdateNavigation();
   bool committed=false;

@@ -2,7 +2,7 @@ using System.IO;
 using System.Text.Json;
 using NAudio.CoreAudioApi;
 using NAudio.Wave;
-namespace Ahenk;
+namespace Faemyr;
 public static class ExclusiveDiagnostics
 {
  public static void Probe(string directory)

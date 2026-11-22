@@ -4,7 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 
-namespace Ahenk;
+namespace Faemyr;
 public partial class MainWindow
 {
  PlayerPreferences playerPreferences=new();bool playerInitialized,sessionReady,resumePrepared;
@@ -67,7 +67,7 @@ public partial class MainWindow
   albumKey=saved.AlbumKey??"";artistName=saved.ArtistName??"";playlistId=saved.PlaylistId??"";
   view=saved.View is "albums" or "artists" or "artist" or "tracks" or "favorites" or "playlists" or "playlist" or "queue" or "album"?saved.View:"albums";
   if(view=="album"&&!library.Any(t=>t.AlbumKey==albumKey))view="albums";
-  if(view=="artist"&&!ArtistCatalog.ProfileNames(library).Contains(artistName))view="artists";
+  if(view=="artist"){if(ArtistCatalog.ResolveSavedProfile(library,artistName) is {} restoredArtist)artistName=restoredArtist;else view="artists";}
   if(view=="playlist"&&CurrentPlaylist==null)view="playlists";
   favoritesTab=saved.FavoritesTab=="albums"?"albums":"tracks";Search.Text=saved.Search??"";searchDelay.Stop();
   if(now!=null){ShowTrackDetails(now);SetSignal(L.T("Oturum geri yüklendi · oynatılmayı bekliyor"));}RefreshView();

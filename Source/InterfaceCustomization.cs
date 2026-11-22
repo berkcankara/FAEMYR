@@ -3,7 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
-namespace Ahenk;
+namespace Faemyr;
 public partial class MainWindow
 {
  readonly List<Action> interfaceEditorRefresh=[],interfaceEditorCleanup=[];bool applyingInterface;int lastAlbumColumns,lastArtistColumns,lastPlaylistColumns;
@@ -18,17 +18,19 @@ public partial class MainWindow
  {
   var p=InterfaceSettings.Current;p.Validate();InterfaceSettings.ApplyResources();
   if(SidebarBorder==null)return;
+  SidebarBorder.SetResourceReference(Border.BackgroundProperty,"ModuleSidebarSurface");DetailPanel.SetResourceReference(Border.BackgroundProperty,"ModuleDetailSurface");
+  LyricsCard.SetResourceReference(Border.BackgroundProperty,"ModuleLyricsSurface");NextTrackCard.SetResourceReference(Border.BackgroundProperty,"ModuleUpNextSurface");
   WindowRoot.ColumnDefinitions[0].Width=new GridLength(p.SidebarWidth);PlayerRow.Height=GridLength.Auto;PlayerRow.MinHeight=Math.Max(p.PlayerHeight,p.PlaySize+44+(p.ShowVolume?24:0));
   TransportControlsHost.RowDefinitions[0].Height=new GridLength(Math.Max(52,p.PlaySize+4));TransportControlsHost.RowDefinitions[1].Height=new GridLength(p.ShowVolume?24:0);
   double sidePadding=Math.Clamp((p.SidebarWidth-156)/2,12,22);SidebarBorder.Padding=new Thickness(Math.Max(4,sidePadding-8),22,Math.Max(4,sidePadding-8),14);
   MainContent.Margin=new Thickness(p.ContentPadding,p.ContentPadding-2,p.ContentPadding-4,Math.Max(10,p.ContentPadding-12));
   AlbumHero.Margin=new Thickness(-p.ContentPadding,-(p.ContentPadding-2),-(p.ContentPadding-4),0);ArtistHero.Margin=new Thickness(-p.ContentPadding,-(p.ContentPadding-2),-(p.ContentPadding-4),22);
-  AmbientCover.Opacity=p.ArtworkOpacity/100;if(AmbientCover.Effect is BlurEffect effect)effect.Radius=p.ArtworkBlur;
+  foreach(var cover in new[]{AmbientCover,PreviousAmbientCover}){cover.Opacity=p.ArtworkOpacity/100;if(cover.Effect is BlurEffect effect)effect.Radius=p.ArtworkBlur;}
   ApplyDetailsPanelLayout(p.ShowRightPanel);
   SignalBox.Visibility=Visible(p.ShowSignal);UpdatePlayerBoxAlignment();
   foreach(var module in new[]{TransportBox,ScopeFrame,SignalBox})
   {
-   module.SetResourceReference(Border.BackgroundProperty,p.PlayerFrames?"Surface":"PlayerSurface");
+   module.SetResourceReference(Border.BackgroundProperty,p.PlayerFrames?"ModulePlayerSurface":"PlayerSurface");
    module.BorderThickness=new Thickness(p.PlayerFrames?.7:0);module.PlainPresentation=!p.PlayerFrames;
   }
   VolumeControls.Visibility=Visible(p.ShowVolume);ShuffleButton.Visibility=Visible(p.ShowShuffle);RepeatButton.Visibility=Visible(p.ShowRepeat);
@@ -58,7 +60,7 @@ public partial class MainWindow
   TrackListFrame.Visibility=Tracks.Visibility;TrackListFrame.PlainPresentation=!hero;
   TrackListFrame.BorderThickness=new Thickness(hero?.7:0);TrackListFrame.Padding=new Thickness(hero?8:0);
   RoundedClip.SetRadius(TrackListViewport,hero?p.PanelRadius:0);
-  PaletteLayer.Visibility=Visible(hero&&p.AlbumArtworkBackground);TrackGlass.Visibility=Visible(hero);AlbumQualityBadge.Visibility=Visible(view=="album"&&p.ShowAlbumQuality);
+  UpdatePageBackdrop();TrackGlass.Visibility=Visible(hero);AlbumQualityBadge.Visibility=Visible(view=="album"&&p.ShowAlbumQuality);
   if(NextTrackCard!=null&&now!=null){nextVisual="";UpdateNextTrack();}
   UpdateArtistProfileLayout();UpdateCollectionHeaderLayout();
  }

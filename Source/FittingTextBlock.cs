@@ -1,7 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 
-namespace Ahenk;
+namespace Faemyr;
 
 // Measure the complete wrapped title before choosing a font size; never trim it.
 public sealed class FittingTextBlock : Control

@@ -6,7 +6,7 @@ using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Shell;
 using NAudio.Wave;
-namespace Ahenk;
+namespace Faemyr;
 public static class DesktopPlaybackTests
 {
  [DllImport("user32.dll")] static extern bool PostMessage(IntPtr hwnd,int message,IntPtr wp,IntPtr lp);
@@ -25,7 +25,7 @@ public static class DesktopPlaybackTests
    foreach(var name in new[]{"previous","play","pause","next"}){var image=SvgIcon.ShellImage(name);Check(image.IsFrozen&&image.Width>=24&&image.Height>=24&&ReferenceEquals(image,SvgIcon.ShellImage(name)),"Native SVG shell icon cached and scalable: "+name);}
    var paths=new List<string>();using(var db=new LibraryStore())for(int i=1;i<=3;i++)
    {
-    string path=Path.Combine(directory,$"silent-desktop-{i}.wav");paths.Add(path);var f=new WaveFormat(48000,16,2);using(var writer=new WaveFileWriter(path,f)){var bytes=new byte[f.AverageBytesPerSecond*20];writer.Write(bytes,0,bytes.Length);}db.Save(new Track{Path=path,Title="Sessiz deneme "+i,Artist="Lyra",AlbumArtist="Lyra",Album="Masaüstü kontrolleri",SampleRate=48000,Bits=16,Channels=2,SampleFormat="s16",Codec="pcm_s16le",Seconds=20,Number=(uint)i});
+    string path=Path.Combine(directory,$"silent-desktop-{i}.wav");paths.Add(path);var f=new WaveFormat(48000,16,2);using(var writer=new WaveFileWriter(path,f)){var bytes=new byte[f.AverageBytesPerSecond*20];writer.Write(bytes,0,bytes.Length);}db.Save(new Track{Path=path,Title="Sessiz deneme "+i,Artist="Faemyr",AlbumArtist="Faemyr",Album="Masaüstü kontrolleri",SampleRate=48000,Bits=16,Channels=2,SampleFormat="s16",Codec="pcm_s16le",Seconds=20,Number=(uint)i});
    }
    await File.WriteAllTextAsync(Path.Combine(Paths.Data,"queue.json"),JsonSerializer.Serialize(paths));new AudioPreferences{Exclusive=false}.Save(Path.Combine(Paths.Data,"audio-settings.json"));
    window=new MainWindow();window.Show();await Until(()=>Field<bool>(window,"libraryReady"));await Task.Delay(1000);
@@ -62,9 +62,9 @@ public static class DesktopPlaybackTests
    Click(2);await Until(()=>Field<Track>(window,"now").Path==paths[1]&&audio.IsPlaying);Check(true,"Taskbar Next click changes queue item");
    Click(0);await Until(()=>Field<Track>(window,"now").Path==paths[0]&&audio.IsPlaying);Check(true,"Taskbar Previous click changes queue item");
    Hotkey(3);await Until(()=>!audio.IsPlaying&&!audio.IsPaused);var registeredIds=Field<List<int>>(window,"mediaHotkeys").ToArray();var closedWindow=window;window.Close();window=null;
-   Check(Field<IntPtr>(closedWindow,"mediaKeyboardHook")==IntPtr.Zero&&Field<HashSet<int>>(closedWindow,"pressedMediaKeys").Count==0,"Closing Lyra removes transport-only fallback hook");
-   using var probe=new HwndSource(new HwndSourceParameters("Lyra registration lifecycle test"){Width=1,Height=1,WindowStyle=0});
-   bool released=true;foreach(int oldId in registeredIds){int i=oldId-DesktopMediaKeys.BaseId,id=0x5c10+i;bool acquired=RegisterHotKey(probe.Handle,id,0x4000,(uint)DesktopMediaKeys.Bindings[i].Key);released&=acquired;if(acquired)UnregisterHotKey(probe.Handle,id);}Check(released&&Field<List<int>>(closedWindow,"mediaHotkeys").Count==0,"Closing Lyra releases its global media key registrations");
+   Check(Field<IntPtr>(closedWindow,"mediaKeyboardHook")==IntPtr.Zero&&Field<HashSet<int>>(closedWindow,"pressedMediaKeys").Count==0,"Closing Faemyr removes transport-only fallback hook");
+   using var probe=new HwndSource(new HwndSourceParameters("Faemyr registration lifecycle test"){Width=1,Height=1,WindowStyle=0});
+   bool released=true;foreach(int oldId in registeredIds){int i=oldId-DesktopMediaKeys.BaseId,id=0x5c10+i;bool acquired=RegisterHotKey(probe.Handle,id,0x4000,(uint)DesktopMediaKeys.Bindings[i].Key);released&=acquired;if(acquired)UnregisterHotKey(probe.Handle,id);}Check(released&&Field<List<int>>(closedWindow,"mediaHotkeys").Count==0,"Closing Faemyr releases its global media key registrations");
   }
   finally{window?.Close();await File.WriteAllTextAsync(Path.Combine(directory,"desktop-playback-results.json"),JsonSerializer.Serialize(new{version=typeof(MainWindow).Assembly.GetName().Version?.ToString(),checks},new JsonSerializerOptions{WriteIndented=true}));}
  }

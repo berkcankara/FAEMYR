@@ -3,7 +3,7 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace Ahenk;
+namespace Faemyr;
 public static class FavoritesTests
 {
  public static void Run(string directory,Action<bool,string> check)

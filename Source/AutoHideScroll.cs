@@ -4,7 +4,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Threading;
 
-namespace Ahenk;
+namespace Faemyr;
 public static class AutoHideScroll
 {
  public static readonly DependencyProperty EnabledProperty=DependencyProperty.RegisterAttached("Enabled",typeof(bool),typeof(AutoHideScroll),new PropertyMetadata(false,Changed));

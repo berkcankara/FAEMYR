@@ -9,7 +9,7 @@ using System.Windows.Shell;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using NAudio.Wave;
-namespace Ahenk;
+namespace Faemyr;
 public static class FullscreenPlayerTests
 {
  static T Field<T>(MainWindow window,string name)=>(T)typeof(MainWindow).GetField(name,BindingFlags.NonPublic|BindingFlags.Instance)!.GetValue(window)!;

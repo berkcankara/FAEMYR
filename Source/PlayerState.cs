@@ -1,7 +1,7 @@
 using System.IO;
 using System.Text.Json;
 
-namespace Ahenk;
+namespace Faemyr;
 public static class PlayerJson
 {
  public static T? Read<T>(string path){try{return JsonSerializer.Deserialize<T>(File.ReadAllText(path));}catch(Exception ex)when(ex is IOException or UnauthorizedAccessException or JsonException){return default;}}

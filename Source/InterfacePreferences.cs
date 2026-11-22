@@ -2,7 +2,7 @@ using System.IO;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Media;
-namespace Ahenk;
+namespace Faemyr;
 
 public sealed class InterfacePreferences
 {

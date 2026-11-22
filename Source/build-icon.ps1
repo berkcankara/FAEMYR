@@ -1,8 +1,8 @@
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
 $iconRoot = Split-Path $PSScriptRoot
-$sourcePath = Join-Path $iconRoot 'Icon\Lyra.png'
-$iconPath = Join-Path $PSScriptRoot 'Assets\Lyra.ico'
+$sourcePath = Join-Path $iconRoot 'Icon\Faemyr.png'
+$iconPath = Join-Path $PSScriptRoot 'Assets\Faemyr.ico'
 $source = [Drawing.Bitmap]::new($sourcePath)
 $frames = [Collections.Generic.List[object]]::new()
 try {
@@ -39,5 +39,5 @@ try {
     }
     foreach ($frame in $frames) { $writer.Write([byte[]]$frame.Bytes) }
 } finally { $writer.Dispose(); $file.Dispose() }
-Copy-Item -LiteralPath $iconPath -Destination (Join-Path $iconRoot 'Icon\Lyra.ico') -Force
+Copy-Item -LiteralPath $iconPath -Destination (Join-Path $iconRoot 'Icon\Faemyr.ico') -Force
 Write-Output "ICO hazır: 16,20,24,32,40,48,64,128,256 px"

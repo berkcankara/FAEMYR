@@ -3,7 +3,7 @@ using NAudio.Wave;
 using NAudio.CoreAudioApi;
 using NAudio.Wave.SampleProviders;
 
-namespace Ahenk;
+namespace Faemyr;
 public sealed class AudioEngine : IDisposable
 {
  ExactWasapiOut? output;WaveStream? reader;MMDevice? device;bool failed;ScopeSource? scopeSource;MediaFoundationResampler? sharedResampler;
@@ -105,7 +105,7 @@ public sealed class AudioEngine : IDisposable
  {
   Stop();seekBase=TimeSpan.Zero;seekClock=0;string stage="Ses dosyasını açma",name="Varsayılan aygıt";try
   {
-   if(dop){preferences!.RequireDop(deviceId);if(muted||volume<1)throw new InvalidOperationException("DoP taşıyıcısına dijital ses seviyesi uygulanamaz. DoP oynatmadan önce Lyra sesini %100 ve sesli duruma getir; dinleme seviyesini DAC üzerinden ayarla.");}dopActive=dop;
+   if(dop){preferences!.RequireDop(deviceId);if(muted||volume<1)throw new InvalidOperationException("DoP taşıyıcısına dijital ses seviyesi uygulanamaz. DoP oynatmadan önce Faemyr sesini %100 ve sesli duruma getir; dinleme seviyesini DAC üzerinden ayarla.");}dopActive=dop;
    reader=factory?.Invoke()??(dop?new DopWaveStream(path):new WaveFileReader(path));sequence=reader as PcmSequenceStream;request=new(path,deviceId,exclusive,gain,dop,preferences?.Copy(),plan);stage="Ses aygıtını açma";using var e=new MMDeviceEnumerator();device=AutomaticAudioOutput.OpenDevice(e,deviceId,preferences?.AutomaticOutput==true&&!dop);name=device.FriendlyName;activeDeviceName=name;ActiveDeviceId=device.ID;
    var original=OriginalSource(reader);
    using var probe=device.AudioClient;IWaveProvider payload=original;WaveFormat selected=original.WaveFormat;var mix=probe.MixFormat;

@@ -3,7 +3,7 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Win32;
-namespace Ahenk;
+namespace Faemyr;
 
 public sealed class AppearanceProfile
 {
@@ -56,8 +56,8 @@ public partial class MainWindow
   void Action(Action action){try{action();}catch(Exception e)when(e is IOException or InvalidDataException or UnauthorizedAccessException or JsonException or ArgumentException){status.Text=e.Message;}}
   save.Click+=(_,_)=>Action(()=>{if(string.IsNullOrWhiteSpace(name.Text)){status.Text=L.T("Profiline bir ad ver.");return;}var profile=CaptureAppearanceProfile(name.Text.Trim());profile.Save(profile.StoredPath);Reload();list.SelectedItem=list.Items.Cast<AppearanceProfile>().FirstOrDefault(p=>p.Name==profile.Name);status.Text=L.T("Görünüm profili kaydedildi.");});
   load.Click+=(_,_)=>Action(()=>{if(list.SelectedItem is not AppearanceProfile profile){status.Text=L.T("Önce bir profil seç.");return;}PreviewAppearanceProfile(profile);name.Text=profile.Name;status.Text=L.T("Profil önizleniyor. Ana Kaydet düğmesiyle uygula veya Vazgeç ile geri dön.");});
-  export.Click+=(_,_)=>Action(()=>{var picker=new SaveFileDialog{Title=L.T("Görünüm profilini dışa aktar"),Filter=L.T("Lyra görünüm profili|*.lyra-theme.json"),FileName="Görünümüm.lyra-theme.json",DefaultExt=".lyra-theme.json",AddExtension=true};if(picker.ShowDialog(owner)!=true)return;CaptureAppearanceProfile(name.Text).Save(picker.FileName);status.Text=L.T("Görünüm profili dışa aktarıldı.");});
-  import.Click+=(_,_)=>Action(()=>{var picker=new OpenFileDialog{Title=L.T("Görünüm profili seç"),Filter=L.T("Lyra görünüm profili|*.json")};if(picker.ShowDialog(owner)!=true)return;var profile=AppearanceProfile.Read(picker.FileName);PreviewAppearanceProfile(profile);name.Text=profile.Name;status.Text=L.T("Profil önizleniyor. İstersen Profili kaydet ile kişisel listene ekle.");});
+  export.Click+=(_,_)=>Action(()=>{var picker=new SaveFileDialog{Title=L.T("Görünüm profilini dışa aktar"),Filter=L.T("Faemyr görünüm profili|*.faemyr-theme.json"),FileName="Görünümüm.faemyr-theme.json",DefaultExt=".faemyr-theme.json",AddExtension=true};if(picker.ShowDialog(owner)!=true)return;CaptureAppearanceProfile(name.Text).Save(picker.FileName);status.Text=L.T("Görünüm profili dışa aktarıldı.");});
+  import.Click+=(_,_)=>Action(()=>{var picker=new OpenFileDialog{Title=L.T("Görünüm profili seç"),Filter=L.T("Faemyr görünüm profili|*.json")};if(picker.ShowDialog(owner)!=true)return;var profile=AppearanceProfile.Read(picker.FileName);PreviewAppearanceProfile(profile);name.Text=profile.Name;status.Text=L.T("Profil önizleniyor. İstersen Profili kaydet ile kişisel listene ekle.");});
   return root;
  }
 }

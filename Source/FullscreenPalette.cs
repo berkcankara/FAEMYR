@@ -1,7 +1,7 @@
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-namespace Ahenk;
+namespace Faemyr;
 public static class FullscreenPalette
 {
  public static Brush Create(BitmapSource? image,bool light,Color fallback)

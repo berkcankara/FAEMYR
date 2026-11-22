@@ -2,7 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-namespace Ahenk;
+namespace Faemyr;
 // Only the overflowing title moves. Animation runs in WPF's compositor, with
 // a reading pause at both ends and no per-frame timer or layout invalidation.
 public sealed class MarqueeText : Control

@@ -2,7 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 
-namespace Ahenk;
+namespace Faemyr;
 public partial class MainWindow
 {
  Button? libraryAddFolder,libraryRescan,libraryCancelScan;

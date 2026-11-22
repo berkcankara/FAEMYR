@@ -3,7 +3,7 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using NAudio.Wave;
-namespace Ahenk;
+namespace Faemyr;
 public interface IAbortableAudio{void Abort();}
 public interface IRealtimeAudio{bool EndOfStream{get;}bool Buffering{get;}}
 // Pipe I/O happens only on the bounded buffer's producer, never on the WASAPI thread.
@@ -79,7 +79,7 @@ public sealed class BufferedAudioSource : IWaveProvider,IRealtimeAudio,IDisposab
  public int BufferedBytes{get{lock(gate)return used;}}
  public BufferedAudioSource(IWaveProvider source,Action abort)
  {
-  this.source=source;this.abort=abort;ring=new byte[Math.Max(source.WaveFormat.BlockAlign*4096,Math.Min(32*1024*1024,checked(source.WaveFormat.AverageBytesPerSecond*2)))];producer=new Thread(Produce){IsBackground=true,Name="Lyra PCM buffer"};producer.Start();
+  this.source=source;this.abort=abort;ring=new byte[Math.Max(source.WaveFormat.BlockAlign*4096,Math.Min(32*1024*1024,checked(source.WaveFormat.AverageBytesPerSecond*2)))];producer=new Thread(Produce){IsBackground=true,Name="Faemyr PCM buffer"};producer.Start();
  }
  void Produce()
  {

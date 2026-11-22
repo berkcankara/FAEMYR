@@ -3,7 +3,7 @@ using System.IO;
 using Windows.Media;
 using Windows.Storage.Streams;
 
-namespace Ahenk;
+namespace Faemyr;
 // Publishes metadata and commands only. This class never creates an audio
 // player, decoder or output device, and never changes the user's volume.
 public sealed class WindowsMediaSession : IDisposable

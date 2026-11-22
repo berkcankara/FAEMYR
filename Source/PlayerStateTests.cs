@@ -7,7 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Threading;
 using NAudio.Wave;
 
-namespace Ahenk;
+namespace Faemyr;
 public static class PlayerStateTests
 {
  sealed class Bytes(byte[] data,WaveFormat format):IWaveProvider{int position;public WaveFormat WaveFormat=>format;public int Read(byte[] buffer,int offset,int count){int n=Math.Min(count,data.Length-position);data.AsSpan(position,n).CopyTo(buffer.AsSpan(offset));position+=n;return n;}}
@@ -48,7 +48,7 @@ public static class PlayerStateTests
    var paths=new List<string>();Track? first=null;using(var db=new LibraryStore())for(int i=0;i<45;i++)
    {
     string path=Path.Combine(directory,$"silent-state-{i:00}.wav");paths.Add(path);using(var writer=new WaveFileWriter(path,new WaveFormat(48000,16,2)))writer.Write(new byte[48000*4*20],0,48000*4*20);
-    var track=new Track{Path=path,Title=$"Sessiz deneme {i:00}",Artist="Lyra",AlbumArtist="Lyra",Album="Oturum denemesi",Seconds=20,SampleRate=48000,Bits=16,Channels=2,SampleFormat="s16",Codec="pcm_s16le",Number=(uint)i+1};db.Save(track);first??=track;
+    var track=new Track{Path=path,Title=$"Sessiz deneme {i:00}",Artist="Faemyr",AlbumArtist="Faemyr",Album="Oturum denemesi",Seconds=20,SampleRate=48000,Bits=16,Channels=2,SampleFormat="s16",Codec="pcm_s16le",Number=(uint)i+1};db.Save(track);first??=track;
    }
    PlayerJson.Write(Path.Combine(Paths.Data,"session.json"),new PlayerSession{Queue=paths,QueueIndex=2,TrackPath=paths[2],Seconds=7.25,View="album",AlbumKey=first!.AlbumKey,SelectedPath=paths[5]});PlayerJson.Write(Path.Combine(Paths.Data,"player-settings.json"),new PlayerPreferences{Volume=.42});new AudioPreferences{Exclusive=false}.Save(Path.Combine(Paths.Data,"audio-settings.json"));
    window=new MainWindow{ShowInTaskbar=false,Opacity=0,Width=1200,Height=760};window.Show();await Until(()=>Field<bool>(window,"sessionReady"));await Task.Delay(500);var audio=Field<AudioEngine>(window,"audio");

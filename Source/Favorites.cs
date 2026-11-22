@@ -3,7 +3,7 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace Ahenk;
+namespace Faemyr;
 public sealed class FavoritesState
 {
  public HashSet<string> Tracks{get;set;}=new(StringComparer.OrdinalIgnoreCase);
@@ -68,7 +68,7 @@ public partial class MainWindow
  void ApplyTrackPreferences(Track track)=>favorites?.Apply(track);
  bool SaveFavoriteAction(Action action)
  {
-  try{action();return true;}catch(Exception ex)when(ex is IOException or UnauthorizedAccessException){MessageBox.Show(this,"Favori veya yıldız kaydedilemedi.\n"+ex.Message,"Lyra",MessageBoxButton.OK,MessageBoxImage.Information);return false;}
+  try{action();return true;}catch(Exception ex)when(ex is IOException or UnauthorizedAccessException){MessageBox.Show(this,"Favori veya yıldız kaydedilemedi.\n"+ex.Message,"Faemyr",MessageBoxButton.OK,MessageBoxImage.Information);return false;}
  }
  void SyncTrackPreferences(string path)
  {
@@ -90,7 +90,7 @@ public partial class MainWindow
   if(sender is not FrameworkElement{DataContext:AlbumCard card,ContextMenu:{} menu})return;
   menu.Items.Clear();var favorite=new MenuItem{Header=L.T(favorites.IsAlbumFavorite(card.Key)?"Favorilerden çıkar":"Favorile")};
   favorite.Click+=(_,_)=>{if(SaveFavoriteAction(()=>favorites.SetAlbumFavorite(card.Key,!favorites.IsAlbumFavorite(card.Key))))RefreshView();};menu.Items.Add(favorite);
-  var enqueue=new MenuItem{Header="Sıraya ekle"};enqueue.Click+=(_,_)=>EnqueueTracks(library.Where(t=>t.AlbumKey==card.Key).OrderBy(t=>t.Disc).ThenBy(t=>t.Number).ThenBy(t=>t.Title,StringComparer.CurrentCultureIgnoreCase),false);menu.Items.Add(enqueue);
+  var enqueue=new MenuItem{Header="Sıraya ekle"};enqueue.Click+=(_,_)=>EnqueueTracks(AlbumDiscs.Order(library.Where(t=>t.AlbumKey==card.Key)),false);menu.Items.Add(enqueue);
  }
  void FavoriteCurrentAlbum_Click(object sender,RoutedEventArgs e)
  {

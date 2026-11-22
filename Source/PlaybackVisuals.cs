@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Media;
 
-namespace Ahenk;
+namespace Faemyr;
 public static class PlaybackVisuals
 {
  public static void Update(IEnumerable<Track> tracks,Track? current,bool playing)

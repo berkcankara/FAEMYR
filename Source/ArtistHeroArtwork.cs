@@ -1,7 +1,7 @@
 using System.IO;
 using System.Windows.Media.Imaging;
 
-namespace Ahenk;
+namespace Faemyr;
 public static class ArtistHeroArtwork
 {
  public static bool IsRectangular(BitmapSource image)=>image.PixelHeight>0&&Math.Abs(image.PixelWidth/(double)image.PixelHeight-1)>.1;

@@ -6,7 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-namespace Ahenk;
+namespace Faemyr;
 public sealed record LyricLine(double Seconds,string Text);
 public sealed class LyricsDocument
 {
@@ -74,7 +74,7 @@ public sealed class LyricsService : IDisposable
  {
   this.directory=directory;client=handler==null?new HttpClient():new HttpClient(handler);
   client.Timeout=TimeSpan.FromSeconds(20);
-  client.DefaultRequestHeaders.UserAgent.ParseAdd("Lyra/0.3.10 (Windows local music player)");
+  client.DefaultRequestHeaders.UserAgent.ParseAdd($"Faemyr/{AppBrand.Version} (Windows local music player)");
   client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
  }
  public static string Key(Track t)=>Paths.Hash(string.Join('\u001f',t.Path,t.Modified,t.Title,t.Artist,t.Album,t.Seconds.ToString("R",CultureInfo.InvariantCulture)));

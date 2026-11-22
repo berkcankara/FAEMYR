@@ -1,5 +1,5 @@
 using System.IO;
-namespace Ahenk;
+namespace Faemyr;
 public sealed class ListeningStats
 {
  public DateTimeOffset AddedAt{get;set;}=DateTimeOffset.UtcNow;public int PlayCount{get;set;}public DateTimeOffset? LastPlayed{get;set;}public double Seconds{get;set;}

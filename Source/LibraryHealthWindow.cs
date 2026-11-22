@@ -2,12 +2,12 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Win32;
-namespace Ahenk;
+namespace Faemyr;
 public partial class MainWindow
 {
  void LibraryHealth_Click(object sender,RoutedEventArgs e)
  {
-  if(!libraryReady)return;var cancel=new CancellationTokenSource();var window=new Window{Title=L.T("Lyra — Arşiv sağlığı"),Owner=settingsWindow??this,Width=920,Height=720,WindowStartupLocation=WindowStartupLocation.CenterOwner};window.SetResourceReference(BackgroundProperty,"Canvas");window.SetResourceReference(ForegroundProperty,"Ink");
+  if(!libraryReady)return;var cancel=new CancellationTokenSource();var window=new Window{Title=L.T("Faemyr — Arşiv sağlığı"),Owner=settingsWindow??this,Width=920,Height=720,WindowStartupLocation=WindowStartupLocation.CenterOwner};window.SetResourceReference(BackgroundProperty,"Canvas");window.SetResourceReference(ForegroundProperty,"Ink");
   var root=new DockPanel{Margin=new Thickness(24)};window.Content=root;var top=new StackPanel();DockPanel.SetDock(top,Dock.Top);root.Children.Add(top);top.Children.Add(new TextBlock{Text=L.T("Arşiv sağlığı"),FontSize=25,FontWeight=FontWeights.Bold});
   var status=new TextBlock{Text=L.T("Eksik dosyaları kontrol et; yinelenen dosyalar içerik özetiyle doğrulanır. Müzik dosyaları silinmez veya değiştirilmez."),TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,10,0,16)};status.SetResourceReference(TextBlock.ForegroundProperty,"Muted");top.Children.Add(status);
   var tools=new WrapPanel();top.Children.Add(tools);var inspect=new Button{Content=L.T("Eksik dosyaları kontrol et")};var duplicates=new Button{Content=L.T("Yinelenenleri doğrula")};var moved=new Button{Content=L.T("Taşınanları bul…")};var manual=new Button{Content=L.T("Dosyayı elle bul…")};var apply=new Button{Content=L.T("Bulunanları eşleştir"),IsEnabled=false};foreach(var button in new[]{inspect,duplicates,moved,manual,apply})tools.Children.Add(button);

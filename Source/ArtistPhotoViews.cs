@@ -4,7 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
 using Microsoft.Win32;
-namespace Ahenk;
+namespace Faemyr;
 public static class ArtistPhotos
 {
  static ArtistPhotoStore? store;
@@ -81,7 +81,7 @@ public partial class MainWindow
   var menu=target.ContextMenu??=new ContextMenu();menu.Items.Clear();var refresh=new MenuItem{Header=L.T("Fotoğrafı internetten yeniden ara"),IsEnabled=ArtistPhotos.Preferences.Enabled};menu.Items.Add(refresh);
   refresh.Click+=async(_,_)=>{ArtistPhotos.Preferences.AlbumCoverArtists.Remove(ArtistPhotoStore.Identity(name));SaveArtistPhotoPreferences();try{var result=await ArtistPhotos.Store.Get(name,true,true);ArtistPhotos.Notify(name);Status.Text=ArtistPhotos.Store.ImagePath(result)!=null?L.T("Sanatçı fotoğrafı güncellendi."):L.T("Fotoğraf bulunamadı veya servise ulaşılamadı; albüm kapağı kullanılıyor.");}catch(OperationCanceledException){}};
   var source=new MenuItem{Header=L.T("Fotoğraf kaynağını aç"),IsEnabled=ArtistPhotos.Store.Cached(name) is {SourceUrl.Length:>0}};source.Click+=(_,_)=>{if(ArtistPhotos.Store.Cached(name) is {} record)OpenPhotoSource(record.SourceUrl);};menu.Items.Add(source);
-  var local=new MenuItem{Header=L.T("Bilgisayarımdan fotoğraf seç…")};local.Click+=async(_,_)=>{var picker=new OpenFileDialog{Title=L.T("Sanatçı fotoğrafı seç"),Filter=L.T("Görseller|*.png;*.jpg;*.jpeg;*.webp;*.bmp")};if(picker.ShowDialog(this)!=true)return;try{if(new FileInfo(picker.FileName).Length>8388608)throw new IOException(L.T("Fotoğraf en fazla 8 MB olabilir."));await Task.Run(()=>ArtistPhotos.Store.Import(name,File.ReadAllBytes(picker.FileName)));ArtistPhotos.Preferences.AlbumCoverArtists.Remove(ArtistPhotoStore.Identity(name));SaveArtistPhotoPreferences();ArtistPhotos.Notify(name);}catch(Exception ex)when(ex is IOException or UnauthorizedAccessException or NotSupportedException or ArgumentException or System.IO.FileFormatException){MessageBox.Show(this,ex.Message,L.T("Lyra — sanatçı fotoğrafı"));}};menu.Items.Add(local);
+  var local=new MenuItem{Header=L.T("Bilgisayarımdan fotoğraf seç…")};local.Click+=async(_,_)=>{var picker=new OpenFileDialog{Title=L.T("Sanatçı fotoğrafı seç"),Filter=L.T("Görseller|*.png;*.jpg;*.jpeg;*.webp;*.bmp")};if(picker.ShowDialog(this)!=true)return;try{if(new FileInfo(picker.FileName).Length>8388608)throw new IOException(L.T("Fotoğraf en fazla 8 MB olabilir."));await Task.Run(()=>ArtistPhotos.Store.Import(name,File.ReadAllBytes(picker.FileName)));ArtistPhotos.Preferences.AlbumCoverArtists.Remove(ArtistPhotoStore.Identity(name));SaveArtistPhotoPreferences();ArtistPhotos.Notify(name);}catch(Exception ex)when(ex is IOException or UnauthorizedAccessException or NotSupportedException or ArgumentException or System.IO.FileFormatException){MessageBox.Show(this,ex.Message,L.T("Faemyr — sanatçı fotoğrafı"));}};menu.Items.Add(local);
   var cover=new MenuItem{Header=L.T("Albüm kapağını kullan")};cover.Click+=(_,_)=>{ArtistPhotos.Preferences.AlbumCoverArtists.Add(ArtistPhotoStore.Identity(name));SaveArtistPhotoPreferences();ArtistPhotos.Notify(name);};menu.Items.Add(cover);
  }
  void SaveArtistPhotoPreferences(){try{PlayerJson.Write(ArtistPhotos.PreferencesPath,ArtistPhotos.Preferences);}catch(Exception ex)when(ex is IOException or UnauthorizedAccessException){Status.Text=ex.Message;}}

@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
 using System.Windows.Interop;
-namespace Ahenk;
+namespace Faemyr;
 public static class DesktopOverlayPolicy
 {
  [StructLayout(LayoutKind.Sequential)] public struct Bounds{public int Left,Top,Right,Bottom;}

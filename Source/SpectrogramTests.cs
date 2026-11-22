@@ -8,7 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using NAudio.Wave;
-namespace Ahenk;
+namespace Faemyr;
 public static class SpectrogramTests
 {
  public static void Run(string directory,Action<bool,string> check)

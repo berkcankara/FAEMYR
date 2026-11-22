@@ -1,4 +1,4 @@
-namespace Ahenk;
+namespace Faemyr;
 public enum RepeatMode { Off, All, One }
 public sealed record PlaybackOrderState(bool Shuffle,RepeatMode Repeat,int[] History,int[] Remaining){public int[] Priority{get;init;}=[];public ulong RandomState{get;init;}}
 public sealed class PlaybackOrder

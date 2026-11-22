@@ -1,6 +1,6 @@
 using System.IO;
 using NAudio.Wave;
-namespace Ahenk;
+namespace Faemyr;
 public sealed record PlaybackEntry(Track Track,int QueueIndex,GainDecision Gain,PlaybackOrderState Order,TimeSpan Start){public Guid Id{get;init;}=Guid.NewGuid();}
 public sealed class PlaybackPlan
 {

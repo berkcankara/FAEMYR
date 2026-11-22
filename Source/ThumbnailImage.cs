@@ -4,7 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace Ahenk;
+namespace Faemyr;
 public static class RoundedClip
 {
  public static readonly DependencyProperty RadiusProperty=DependencyProperty.RegisterAttached("Radius",typeof(double),typeof(RoundedClip),new PropertyMetadata(0d,Changed));

@@ -3,7 +3,7 @@ using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
 
-namespace Ahenk;
+namespace Faemyr;
 public sealed class SignalDisplayPreferences
 {
  public bool ShowHeading{get;set;}=true;

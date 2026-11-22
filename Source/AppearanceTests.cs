@@ -2,7 +2,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Media;
 
-namespace Ahenk;
+namespace Faemyr;
 public static class AppearanceTests
 {
  public static void Run(string directory,Action<bool,string> check)

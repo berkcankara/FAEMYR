@@ -3,7 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
-namespace Ahenk;
+namespace Faemyr;
 public sealed class TrackChangeGate
 {
  string? last;
@@ -38,7 +38,7 @@ public partial class MainWindow
   var mini=new MiniPlayerWindow(RunDesktopAction,RestoreMainPlayer,pin=>{desktopPreferences.MiniTopmost=pin;SaveDesktopPlayers();},position=>{Seek.Value=position;CommitSeek();},level=>VolumeSlider.Value=level,()=>Mute_Click(this,new RoutedEventArgs())){Topmost=desktopPreferences.MiniTopmost,Opacity=Opacity,ShowInTaskbar=ShowInTaskbar,ShowActivated=ShowActivated,Icon=Icon};miniPlayer=mini;miniArtistTrack=null;mini.SyncPin();
   mini.RestorePreferences(desktopPreferences);
   mini.AddHandler(ArtistLinks.ArtistRequestedEvent,new RoutedEventHandler((_,e)=>{RestoreMainPlayer();ArtistLinkRequested(this,e);}));
-  var context=new ContextMenu();var restore=new MenuItem{Header=L.T("Ana pencereye dön")};restore.Click+=(_,_)=>RestoreMainPlayer();context.Items.Add(restore);var quit=new MenuItem{Header=L.T("Lyra’dan çık")};quit.Click+=(_,_)=>Close();context.Items.Add(quit);mini.ContextMenu=context;
+  var context=new ContextMenu();var restore=new MenuItem{Header=L.T("Ana pencereye dön")};restore.Click+=(_,_)=>RestoreMainPlayer();context.Items.Add(restore);var quit=new MenuItem{Header=L.T("Faemyr’den çık")};quit.Click+=(_,_)=>Close();context.Items.Add(quit);mini.ContextMenu=context;
   bool placed=desktopPreferences.Left.HasValue&&desktopPreferences.Top.HasValue;if(placed){mini.Left=desktopPreferences.Left!.Value;mini.Top=desktopPreferences.Top!.Value;}
   mini.Closed+=(_,_)=>{desktopSaveTimer.Stop();mini.CapturePreferences(desktopPreferences);if(ReferenceEquals(miniPlayer,mini))miniPlayer=null;if(!closingDesktopPlayers){Show();if(WindowState==WindowState.Minimized)WindowState=WindowState.Normal;if(Opacity>0)Activate();SaveDesktopPlayers();}};
   UpdateMiniPlayer();mini.Show();mini.UpdateLayout();DesktopOverlayPolicy.TopRight(mini,placed);

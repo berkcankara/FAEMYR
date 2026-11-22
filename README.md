@@ -1,80 +1,66 @@
-# Lyra
+# Faemyr — Lossless Music Player
 
-Windows için yerel müzik arşivi oynatıcısı. Mevcut sürüm: **0.10.39**.
+Faemyr is a customizable, local-first music player for Windows, combining high-resolution audio with a modern modular interface and a personal music library. Current version: **0.10.49**.
 
-Windows medya paneliyle bütünleşir: parça adı, sanatçı, albüm kapağı ve oynatma kontrolleri Windows'a iletilir. Kilit ekranındaki görünürlük Windows sürümüne ve sistem ayarlarına bağlıdır. Medya tuşlarının hangi uygulamaya yönleneceğini Windows yönetir. Windows 10 sürüm 1809 veya üzeri gerekir.
+Faemyr plays the music files on your computer. Library scanning, artwork and audio visualization work locally. Optional online lyrics, artist photographs and Wikipedia summaries require an internet connection. The interface is available in English and Turkish.
 
-Üst çubukta geri düğmesi, üzerine gelindiğinde veya tıklandığında genişleyen arama ve sağ paneli açma/kapatma düğmesi bulunur. Sağ panel gizliyken çalan parçanın adı ve sanatçısı çubuğun ortasında görünür. Saydam üst çubuk, albüm veya çalma listesi arka planını kesintisiz gösterir.
+## Features
 
-Lyra kendi bilgisayarındaki müzik dosyalarını çalar. Arşiv taraması, kapaklar ve görselleştirme yerel olarak çalışır. Çevrimiçi şarkı sözü, sanatçı fotoğrafı ve Wikipedia özeti aramaları internet bağlantısı kullanır. Türkçe ve İngilizce arayüz bulunur.
+- Browse albums and artists, search your collection, and manage queues, playlists and smart playlists.
+- Group albums and artists by letter; multi-disc albums show separate numbered disc headings in track order.
+- Artist profiles with photographs, localized Wikipedia biographies, attribution and offline caching.
+- Track and album favorites, five-star ratings, and library filters.
+- FLAC, ALAC, WAV, AIFF, WavPack and other supported audio formats; detailed metadata and signal-path information.
+- Automatic compatible audio output, manual device selection, WASAPI shared/exclusive output, ReplayGain and high-resolution playback.
+- Real-time oscilloscope, spectrum analyzer, VU meter and spectrogram.
+- Local or optional online lyrics, synchronized scrolling and click-to-seek on timed lyrics.
+- Fullscreen and resizable mini player, track notifications, keyboard media keys, and Windows taskbar/media controls.
+- Modular interface with customizable themes, accent colors, artwork backgrounds, translucent panels and a pure-black OLED theme.
 
-## Özellikler
+## Install on Windows
 
-- Albüm ve sanatçı görünümleri, arama, çalma kuyruğu ve çalma listeleri.
-- Sanatçı profillerinde arayüz diline uygun Wikipedia özeti, kaynak bağlantısı ve çevrimdışı önbellek.
-- Favoriler, beş yıldızlı puanlama ve arşiv filtreleri.
-- FLAC, WavPack ve diğer desteklenen ses biçimleri; ayrıntılı etiket/teknik bilgi görünümü.
-- Ses aygıtı seçimi, WASAPI paylaşımlı/özel çıkış seçenekleri ve ReplayGain.
-- Osiloskop, spektrum, VU metre ve canlı spektrogram.
-- Yerel veya isteğe bağlı çevrimiçi şarkı sözleri; mevcutsa zamanlı söz takibi ve satıra tıklayarak o zamana atlama.
-- Tam ekran ve mini oynatıcı, multimedya tuşları, görev çubuğu kontrolleri.
-- Özelleştirilebilir arayüz, tema ve OLED siyah tema.
+1. Download the `Windows-x64-Setup.exe` file from [Releases](https://github.com/berkcankara/FAEMYR-Lossless-Music-Player/releases).
+2. Run the installer and choose the installation directory.
+3. Select the Start menu and desktop shortcut options (both are selected by default).
+4. Complete installation and open Faemyr.
+5. Select **Settings → Music library → Add folder** to add your music.
 
-## Windows sürümünü kurma
+The default location is `AppData\Local\Programs\Faemyr`. Administrator privileges and a separate .NET installation are not required. If you choose a different location, make sure your account can write to it.
 
-1. [Sürümler](https://github.com/berkcankara/LYRA-Lossless-Music-Player/releases) sayfasından `Windows-x64-Setup.exe` ile biten dosyayı indir ve aç.
-2. Kurulum klasörünü seç.
-3. Başlat menüsü ve masaüstü kısayolu seçeneklerini belirle; ikisi de başlangıçta işaretlidir.
-4. Kurulumu tamamla ve Lyra'yı aç.
-5. **Ayarlar → Müzik arşivi → Klasör ekle** yolundan müzik klasörünü seç.
+When upgrading from Lyra, choose the existing installation directory. Your library, settings and favorites in the `data` folder are preserved; previous shortcuts can open the renamed application. Back up the `data` folder before updating. If switching from portable, copy that folder into the new installation with the player closed.
 
-Kurulum varsayılan olarak kendi kullanıcı hesabındaki `AppData\Local\Programs\Lyra` klasörüne yapılır ve yönetici izni istemez. Başka bir konum seçersen hesabının o klasöre yazabilmesi gerekir. Ayrı .NET kurulumu gerekmez. Güncellemeler ve kaldırma işlemi uygulamanın oluşturduğu `data` klasörünü korur. Portable sürümden geçerken Lyra kapalıyken mevcut `data` klasörünü yeni Lyra klasörüne kopyalayabilirsin.
+## Portable edition
 
-Depo gizliyse indirme bağlantılarına yalnızca depoya erişimi olan GitHub hesapları ulaşabilir.
+1. Download the Windows x64 Portable ZIP from [Releases](https://github.com/berkcankara/FAEMYR-Lossless-Music-Player/releases).
+2. Extract the **entire** archive into a writable folder.
+3. Open `Faemyr/Faemyr.exe` and add your music folders in Settings.
 
-## Kurulumsuz kullanım
+Keep the executable and its companion files together. Do not run the application directly from inside the ZIP. The required .NET runtime is bundled. The application creates a `data` folder for your library, preferences and cache; preserve it when upgrading.
 
-1. Windows x64 Portable ZIP paketini indir.
-2. ZIP'e sağ tıklayıp **Tümünü ayıkla** seçeneğini kullan.
-3. Çıkan `Lyra` klasörünü yazma iznin olan bir konuma yerleştir ve içindeki `Lyra.exe` dosyasını aç.
-4. **Ayarlar → Müzik arşivi → Klasör ekle** yolundan müzik klasörünü seç.
+The current distribution targets Windows 10 version 1809 or newer and Windows 11, x64. Direct compatibility testing on Windows 10 is still pending. Windows media flyout and lock-screen visibility depend on the Windows version and system settings. The macOS version is being developed separately and is not included in this release.
 
-ZIP'in içinden çalıştırma. Yalnızca EXE'yi ayırma; yanındaki dosya ve klasörleri birlikte tut. Gerekli .NET çalışma ortamı taşınabilir pakette bulunur. İlk açılışta oluşturulan `data` klasörü arşiv kayıtları, tercihler ve önbellekleri saklar; güncellemeden önce bu klasörü yedekle ve koru.
+## Build from source
 
-Mevcut paket **Windows x64** içindir. Windows 10 üzerinde doğrudan uyumluluk testi henüz yapılmamıştır. macOS sürümü bu depoda henüz bulunmaz.
-
-## Kaynaktan derleme
-
-Windows üzerinde .NET 8 SDK ve PowerShell gerekir:
+Install the .NET 8 SDK and PowerShell on Windows, then run:
 
 ```powershell
 ./Source/build.ps1
 ```
 
-Çıktı `App` klasörüne yazılır. Projenin eski dosya adı `Source/Ahenk.csproj` ve iç ad alanı `Ahenk` olarak korunur; oluşturulan uygulamanın adı `Lyra`dır.
+The `Source/Faemyr.csproj` project publishes to the `App` directory.
 
-Kurulum EXE'sini ve Portable ZIP'i hazırlamak için Inno Setup 7 derleyicisiyle:
+To build the Windows installer and portable ZIP using Inno Setup 7:
 
 ```powershell
 ./Installer/build-installer.ps1 -CompilerPath 'C:\Program Files\Inno Setup 7\ISCC.exe'
 ```
 
-Paketler `.artifacts` klasörüne yazılır. Derleme yalnızca uygulama dosyalarını alır; kişisel `data` klasörü, arşiv veritabanları ve hata ayıklama dosyaları pakete eklenmez. Güncelleme notları [CHANGELOG.md](CHANGELOG.md) dosyasındadır.
+Packages are written to `.artifacts`. The packaging script excludes personal data, library databases, caches and debugging files. See [CHANGELOG.md](CHANGELOG.md) for release history.
 
-Çalışma sırasında kullanılan ayrı komut satırı araçları `App/tools` içinde olmalıdır:
+The external command-line tools used during playback belong in `App/tools`: `ffmpeg.exe`, `ffprobe.exe` and `wvunpack.exe`. Those binaries are not committed to the source repository. See [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) for versions, licenses and source references.
 
-- `ffmpeg.exe`
-- `ffprobe.exe`
-- `wvunpack.exe`
+## Distribution and licenses
 
-Bu araçların çalıştırılabilir dosyaları kaynak deposuna eklenmez. Kullanılan sürüm, derleme bilgisi ve lisanslar için [üçüncü taraf bildirimlerini](THIRD-PARTY-NOTICES.md) incele. Bir dağıtım hazırlarken ilgili lisans metinleri ve gerekli kaynak erişimini de sağlamalısın.
+The repository contains source code, icon assets and third-party license notices, not your music library or personal application data. Large downloadable packages are distributed through GitHub Releases. This repository is private; only authorized GitHub accounts can access the downloads.
 
-## Depo kapsamı
-
-Kaynak kodu `Source`, ikon kaynakları `Icon`, üçüncü taraf lisans metinleri `licenses` klasöründedir. Kurulu uygulama, kişisel müzik dosyaları, arşiv veritabanı, kullanıcı tercihleri ve önbellekler Git'e eklenmez. İndirilebilir büyük ZIP paketleri kaynak geçmişi yerine GitHub Releases üzerinden paylaşılmalıdır.
-
-## Yayın ve lisans durumu
-
-Uygulama henüz dijital olarak imzalanmamıştır. Mevcut taşınabilir paket bir geliştirme dağıtımıdır; halka açık ikili dağıtım için üçüncü taraf bileşenlerin karşılık gelen kaynak erişimi ve lisans bildirim işlemleri henüz tamamlanmamıştır. [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) ve [licenses](licenses) bu durumu açıklar.
-
-Lyra'nın kendi kaynak kodu için ayrıca bir açık kaynak lisansı seçilmemiştir. Üçüncü taraf bileşenler kendi lisanslarına tabidir; bu lisanslar kendiliğinden Lyra'nın tüm kaynak koduna uygulanmış sayılmaz.
+The application and installer are not digitally signed. The current packages are development distributions; the corresponding source provision and license notices for third-party components must be completed before public binary distribution. See [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) and [licenses](licenses). No separate open-source license has been chosen for Faemyr's own source code; third-party licenses apply to their respective components.

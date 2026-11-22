@@ -4,7 +4,7 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Threading;
 
-namespace Ahenk;
+namespace Faemyr;
 // Opt-in diagnostic mode. Normal launches neither collect nor write measurements.
 public static class StartupMetrics
 {

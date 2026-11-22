@@ -1,6 +1,6 @@
 using System.Windows.Controls;
 
-namespace Ahenk;
+namespace Faemyr;
 public partial class MainWindow
 {
  void UpdateNavigation()

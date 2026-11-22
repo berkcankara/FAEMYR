@@ -5,7 +5,7 @@ using System.Text.Json;
 using System.Buffers.Binary;
 using Microsoft.Data.Sqlite;
 
-namespace Ahenk;
+namespace Faemyr;
 public sealed record MetadataField(string Key,string Value)
 {
  [System.Text.Json.Serialization.JsonIgnore] public bool IsArtist=>ArtistCatalog.IsArtistField(Key);
@@ -45,6 +45,7 @@ public sealed class Track : System.ComponentModel.INotifyPropertyChanged
  public int DsdRate {get;set;}
  [System.Text.Json.Serialization.JsonIgnore] public bool IsDsd=>System.IO.Path.GetExtension(Path).ToLowerInvariant() is ".dsf" or ".dff"||Codec.StartsWith("dsd",StringComparison.OrdinalIgnoreCase)||Codec.Equals("dst",StringComparison.OrdinalIgnoreCase);
  public uint Number {get;set;} public uint Disc {get;set;} public double Seconds {get;set;} public long Modified {get;set;}
+ [System.Text.Json.Serialization.JsonIgnore] public uint AlbumDisc=>AlbumDiscs.Number(this);
  public List<MetadataField> Fields {get;set;}=[]; public string ProbeJson {get;set;}="";
  public string Duration => TimeSpan.FromSeconds(Seconds).ToString(Seconds>=3600?@"h\:mm\:ss":@"m\:ss");
  public string Quality => IsDsd?L.T($"DSD{(DsdRate>0?DsdRate/44100:0)} · {DsdRate/1000000.0:0.####} MHz · {Channels} kanal"):L.T($"{Codec.ToUpperInvariant()} · {(Bits>0?Bits+" bit":L.T("kodlanmış ses"))} / {SampleRate/1000.0:0.###} kHz · {Channels} kanal");
@@ -65,7 +66,7 @@ public sealed class AlbumCard
 public static class Paths
 {
  public static string Base => AppContext.BaseDirectory;
- public static string Data => (Environment.GetEnvironmentVariable("LYRA_DATA_DIRECTORY")??Environment.GetEnvironmentVariable("AHENK_DATA_DIRECTORY")) is {Length:>0} isolated?System.IO.Path.GetFullPath(isolated):System.IO.Path.Combine(Base,"data");
+ public static string Data => (Environment.GetEnvironmentVariable("FAEMYR_DATA_DIRECTORY")??Environment.GetEnvironmentVariable("LYRA_DATA_DIRECTORY")??Environment.GetEnvironmentVariable("AHENK_DATA_DIRECTORY")) is {Length:>0} isolated?System.IO.Path.GetFullPath(isolated):System.IO.Path.Combine(Base,"data");
  public static string Tool(string name) => System.IO.Path.Combine(Base,"tools",name+".exe");
  public static string Hash(string value) => Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(value)));
 }

@@ -2,14 +2,20 @@ using System.IO;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Automation;
 
-namespace Ahenk;
+namespace Faemyr;
 public enum AlbumSortMode { Artist, Title, YearNewest, TrackCount }
 public sealed record AlbumSortChoice(AlbumSortMode Mode,string Text){public string Label=>L.T(Text);}
+public enum ArtistSortMode { NameAscending, NameDescending }
+public sealed record ArtistSortChoice(ArtistSortMode Mode,string Text){public string Label=>L.T(Text);}
 public sealed class AlbumSortSettings
 {
  public AlbumSortMode Mode {get;set;}=AlbumSortMode.Artist;
- public static AlbumSortSettings Load(string path){try{var value=JsonSerializer.Deserialize<AlbumSortSettings>(File.ReadAllText(path))??new();if(!Enum.IsDefined(value.Mode))value.Mode=AlbumSortMode.Artist;return value;}catch(Exception ex)when(ex is IOException or JsonException or UnauthorizedAccessException){return new();}}
+ public ArtistSortMode ArtistMode {get;set;}=ArtistSortMode.NameAscending;
+ public bool GroupByLetter {get;set;}=true;
+ public static AlbumSortSettings Load(string path){try{var value=JsonSerializer.Deserialize<AlbumSortSettings>(File.ReadAllText(path))??new();if(!Enum.IsDefined(value.Mode))value.Mode=AlbumSortMode.Artist;if(!Enum.IsDefined(value.ArtistMode))value.ArtistMode=ArtistSortMode.NameAscending;return value;}catch(Exception ex)when(ex is IOException or JsonException or UnauthorizedAccessException){return new();}}
  public void Save(string path){Directory.CreateDirectory(System.IO.Path.GetDirectoryName(path)!);string temp=path+".tmp";try{File.WriteAllText(temp,JsonSerializer.Serialize(this));File.Move(temp,path,true);}finally{if(File.Exists(temp))File.Delete(temp);}}
 }
 public static class AlbumSorting
@@ -39,12 +45,36 @@ public partial class MainWindow
  {
   albumSortSettings=AlbumSortSettings.Load(AlbumSortSettingsPath);
   AlbumSort.ItemsSource=new[]{new AlbumSortChoice(AlbumSortMode.Artist,"Sanatçı · A–Z"),new AlbumSortChoice(AlbumSortMode.Title,"Albüm adı · A–Z"),new AlbumSortChoice(AlbumSortMode.YearNewest,"Yıl · yeni → eski"),new AlbumSortChoice(AlbumSortMode.TrackCount,"Parça sayısı · çoktan aza")};
-  AlbumSort.SelectedValue=albumSortSettings.Mode;albumSortReady=true;
+  ArtistSort.ItemsSource=new[]{new ArtistSortChoice(ArtistSortMode.NameAscending,"Sanatçı adı · A–Z"),new ArtistSortChoice(ArtistSortMode.NameDescending,"Sanatçı adı · Z–A")};
+  AlbumSort.SelectedValue=albumSortSettings.Mode;ArtistSort.SelectedValue=albumSortSettings.ArtistMode;albumSortReady=true;UpdateGalleryGroupingButtons();
  }
  void AlbumSort_Changed(object sender,SelectionChangedEventArgs e)
  {
   if(!albumSortReady||AlbumSort.SelectedValue is not AlbumSortMode mode)return;
-  albumSortSettings.Mode=mode;RefreshView();if(Albums.Items.Count>0)Albums.ScrollIntoView(Albums.Items[0]);
-  try{albumSortSettings.Save(AlbumSortSettingsPath);}catch(Exception ex)when(ex is IOException or UnauthorizedAccessException){Status.Text="Sıralama tercihi kaydedilemedi: "+ex.Message;}
+  albumSortSettings.Mode=mode;UpdateGalleryGroupingButtons();RefreshView();if(Albums.Items.Count>0)Albums.ScrollIntoView(Albums.Items[0]);
+  SaveGallerySort();
  }
+ void ArtistSort_Changed(object sender,SelectionChangedEventArgs e)
+ {
+  if(!albumSortReady||ArtistSort.SelectedValue is not ArtistSortMode mode)return;
+  albumSortSettings.ArtistMode=mode;RefreshView();if(Artists.Items.Count>0)Artists.ScrollIntoView(Artists.Items[0]);SaveGallerySort();
+ }
+ void GalleryGrouping_Click(object sender,RoutedEventArgs e)
+ {
+  if(!albumSortReady||sender is not ToggleButton button||!button.IsEnabled)return;
+  albumSortSettings.GroupByLetter=button.IsChecked==true;UpdateGalleryGroupingButtons();RefreshView();
+  var gallery=view=="artists"?Artists:Albums;if(gallery.Items.Count>0)gallery.ScrollIntoView(gallery.Items[0]);SaveGallerySort();
+ }
+ void UpdateGalleryGroupingButtons()
+ {
+  bool alphabetical=albumSortSettings.Mode is AlbumSortMode.Artist or AlbumSortMode.Title;
+  AlbumGroupingButton.IsEnabled=alphabetical;
+  AlbumGroupingButton.IsChecked=alphabetical&&albumSortSettings.GroupByLetter;ArtistGroupingButton.IsChecked=albumSortSettings.GroupByLetter;
+  foreach(var button in new[]{AlbumGroupingButton,ArtistGroupingButton})
+  {
+   AutomationProperties.SetName(button,L.T("Kategorili görünüm"));
+   button.ToolTip=!button.IsEnabled?L.T("Kategorili görünüm yalnızca alfabetik sıralamada kullanılabilir."):button.IsChecked==true?L.T("Kategorili görünümü kapat"):L.T("Kategorili görünümü aç");
+  }
+ }
+ void SaveGallerySort(){try{albumSortSettings.Save(AlbumSortSettingsPath);}catch(Exception ex)when(ex is IOException or UnauthorizedAccessException){Status.Text=L.T("Sıralama tercihi kaydedilemedi: ")+ex.Message;}}
 }

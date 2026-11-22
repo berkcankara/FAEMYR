@@ -6,7 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
 
-namespace Ahenk;
+namespace Faemyr;
 public static class MaximizedHeaderTests
 {
  [StructLayout(LayoutKind.Sequential)] struct RectI{public int Left,Top,Right,Bottom;}

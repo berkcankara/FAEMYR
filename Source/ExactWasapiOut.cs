@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using NAudio.CoreAudioApi;
 using NAudio.Wave;
 
-namespace Ahenk;
+namespace Faemyr;
 // Explicit WASAPI lifecycle. Shared mode receives the actual Windows mix format;
 // no AutoConvertPcm, implicit fallback or hidden resampler is enabled here.
 public sealed class ExactWasapiOut : IDisposable
@@ -33,10 +33,10 @@ public sealed class ExactWasapiOut : IDisposable
    ObjectDisposedException.ThrowIf(disposed,this);if(!initialized)throw new InvalidOperationException("Ses çıkışı hazırlanmadı.");
    if(state==PlaybackState.Playing)return;
    if(state==PlaybackState.Paused){state=PlaybackState.Playing;if(client.CurrentPadding>0){client.Start();StartCount++;started=true;}wake.Set();return;}
-   state=PlaybackState.Playing;draining=false;thread=new Thread(Run){IsBackground=true,Name="Lyra WASAPI"};thread.Start();
+   state=PlaybackState.Playing;draining=false;thread=new Thread(Run){IsBackground=true,Name="Faemyr WASAPI"};thread.Start();
   }
  }
- public void StartPaused(){lock(gate){ObjectDisposedException.ThrowIf(disposed,this);if(!initialized)throw new InvalidOperationException("Ses çıkışı hazırlanmadı.");state=PlaybackState.Paused;thread=new Thread(Run){IsBackground=true,Name="Lyra WASAPI"};thread.Start();}}
+ public void StartPaused(){lock(gate){ObjectDisposedException.ThrowIf(disposed,this);if(!initialized)throw new InvalidOperationException("Ses çıkışı hazırlanmadı.");state=PlaybackState.Paused;thread=new Thread(Run){IsBackground=true,Name="Faemyr WASAPI"};thread.Start();}}
  // Stop the endpoint itself, not just the producer thread. The clock and queued
  // frames remain frozen until resume, so pause cannot leave an endpoint running.
  public void Pause(){lock(gate){if(state!=PlaybackState.Playing)return;if(started){client.Stop();started=false;}state=PlaybackState.Paused;}}

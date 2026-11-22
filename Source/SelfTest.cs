@@ -4,7 +4,7 @@ using System.Text.Json;
 using System.Security.Cryptography;
 using NAudio.Wave;
 
-namespace Ahenk;
+namespace Faemyr;
 public static class SelfTest
 {
  public static async Task Run(string directory)

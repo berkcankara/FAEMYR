@@ -7,7 +7,7 @@ using System.Windows.Automation;
 using System.Windows.Controls;
 using NAudio.CoreAudioApi;
 using NAudio.Wave;
-namespace Ahenk;
+namespace Faemyr;
 public static class AutomaticAudioTests
 {
  public static async Task Run(string directory)

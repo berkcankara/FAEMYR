@@ -2,7 +2,7 @@ using System.Buffers.Binary;
 using System.IO;
 using NAudio.Wave;
 
-namespace Ahenk;
+namespace Faemyr;
 public static class OscilloscopeTests
 {
  public static void Run(Action<bool,string> check)

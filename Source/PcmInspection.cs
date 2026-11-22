@@ -1,6 +1,6 @@
 using System.IO;
 using System.Text.Json;
-namespace Ahenk;
+namespace Faemyr;
 public static class PcmInspection
 {
  public static async Task Run(string directory,string path)

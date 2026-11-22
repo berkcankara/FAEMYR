@@ -1,7 +1,7 @@
 using System.IO;
 using System.Windows.Media.Imaging;
 
-namespace Ahenk;
+namespace Faemyr;
 public static class PlaylistArtwork
 {
  public static string Import(string source,string directory,string id)

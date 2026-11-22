@@ -2,7 +2,7 @@ using System.IO;
 using System.Text.Json;
 using NAudio.Wave;
 using NAudio.CoreAudioApi;
-namespace Ahenk;
+namespace Faemyr;
 public static class EndpointSharingTests
 {
  sealed class Silence(WaveFormat format):IWaveProvider{public WaveFormat WaveFormat=>format;public int Read(byte[] b,int o,int c){Array.Clear(b,o,c);return c;}}
@@ -24,14 +24,14 @@ public static class EndpointSharingTests
   try
   {
    using var endpoints=new MMDeviceEnumerator();using var device=TestDevice(endpoints);Check(true,"Selected idle Exclusive-capable endpoint",device.FriendlyName);
-   Check(Shared(device,out string? initial),"Other shared clients can initialize before Lyra playback",initial);
+   Check(Shared(device,out string? initial),"Other shared clients can initialize before Faemyr playback",initial);
    Check(device.AudioMeterInformation.MasterPeakValue<.001,"Endpoint idle before zero-only exclusive test");
    string path=Path.Combine(directory,"zero.wav");var format=new WaveFormat(44100,16,2);using(var writer=new WaveFileWriter(path,format))writer.Write(new byte[format.AverageBytesPerSecond*4],0,format.AverageBytesPerSecond*4);
    using var player=new AudioEngine();string? failure=null;player.Failed+=text=>failure=text;player.Play(path,device.ID,true);
    async Task Wait(Func<bool> ready){for(int i=0;i<300&&!ready()&&failure==null;i++)await Task.Delay(10);if(failure!=null)throw new Exception(failure);}
    await Wait(()=>player.DeviceStarted);Check(player.DeviceStarted,"Exclusive zero PCM starts");Check(!Shared(device,out var blocked),"Active Exclusive reserves the device",blocked);
    player.Toggle();double paused=player.Position.TotalSeconds;await Task.Delay(100);Check(player.IsPaused&&!player.DeviceStarted&&Math.Abs(player.Position.TotalSeconds-paused)<.02,"Pause retains position without an active stream");
-   Check(Shared(device,out var afterPause),"Other apps can initialize shared output while Lyra is paused",afterPause);
+   Check(Shared(device,out var afterPause),"Other apps can initialize shared output while Faemyr is paused",afterPause);
    player.Position=TimeSpan.FromSeconds(1);Check(player.IsPaused&&Math.Abs(player.Position.TotalSeconds-1)<.02&&Shared(device,out _),"Seeking while paused does not reacquire Exclusive");
    using(var otherClient=device.AudioClient)using(var otherOutput=new ExactWasapiOut(device,AudioClientShareMode.Shared))
    {

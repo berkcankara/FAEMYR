@@ -4,7 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using Microsoft.Win32;
 
-namespace Ahenk;
+namespace Faemyr;
 public partial class MainWindow
 {
  FrameworkElement BuildPlaylistCoverEditor(LocalPlaylist draft,Window dialog,Func<string?>? selectCover=null)
@@ -21,7 +21,7 @@ public partial class MainWindow
    if(selectCover!=null)path=selectCover();
    else{var picker=new OpenFileDialog{Title=L.T("Çalma listesi kapağı seç"),Filter=L.T("Görseller|*.jpg;*.jpeg;*.png;*.bmp")};path=picker.ShowDialog(dialog)==true?picker.FileName:null;}
    if(path==null)return;
-   if(CoverImage(path)==null){MessageBox.Show(dialog,L.T("Bu görsel açılamadı."),"Lyra");return;}
+   if(CoverImage(path)==null){MessageBox.Show(dialog,L.T("Bu görsel açılamadı."),"Faemyr");return;}
    draft.Cover=path;Preview();
   };
   var clear=new Button{Content=L.T("Renk kullan"),Margin=new Thickness(0,0,0,10)};tools.Children.Add(clear);clear.Click+=(_,_)=>{draft.Cover="";Preview();};

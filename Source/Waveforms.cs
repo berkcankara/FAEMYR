@@ -6,7 +6,7 @@ using System.Buffers.Binary;
 using System.Windows;
 using System.Windows.Media;
 
-namespace Ahenk;
+namespace Faemyr;
 public sealed class WaveformData
 {
  public int Version {get;set;}=1;

@@ -9,7 +9,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using NAudio.Wave;
-namespace Ahenk;
+namespace Faemyr;
 public static class ArtistPhotoTests
 {
  const string Page="{\"query\":{\"pages\":[{\"title\":\"Ada\",\"pageimage\":\"Ada.jpg\",\"thumbnail\":{\"source\":\"https://upload.wikimedia.org/ada.png\"},\"categories\":[{\"title\":\"Category:Turkish singers\"}]}]}}";

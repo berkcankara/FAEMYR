@@ -3,7 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
-namespace Ahenk;
+namespace Faemyr;
 public partial class MainWindow
 {
  SettingsSection BuildInterfaceSettings(string section)

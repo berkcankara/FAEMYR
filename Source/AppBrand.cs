@@ -7,7 +7,8 @@ internal static class AppBrand
 {
  public const string Name="Faemyr";
  public const string Executable="Faemyr.exe";
- public static string Version=>typeof(AppBrand).Assembly.GetName().Version?.ToString(3)??"0.10.49";
+ public const string ShortcutIcon="Faemyr-brand-v2.ico";
+ public static string Version=>typeof(AppBrand).Assembly.GetName().Version?.ToString(3)??"0.10.53";
  public static bool ForwardLegacyLaunch(IEnumerable<string> arguments)
  {
   if(!string.Equals(Path.GetFileName(Environment.ProcessPath),"Lyra.exe",StringComparison.OrdinalIgnoreCase))return false;

@@ -40,7 +40,20 @@ public sealed class Track : System.ComponentModel.INotifyPropertyChanged
  [System.Text.Json.Serialization.JsonIgnore] public bool IsCue=>!string.IsNullOrEmpty(CueSheetPath);
  public string Album {get;set;}=""; public string AlbumArtist {get;set;}=""; public string Cover {get;set;}="";
  public string Codec {get;set;}=""; public string SampleFormat {get;set;}=""; public string WavPackInfo {get;set;}="";
- public string WavPackMode => System.Text.RegularExpressions.Regex.Match(WavPackInfo,@"^modalities:\s*(.+)$",System.Text.RegularExpressions.RegexOptions.Multiline|System.Text.RegularExpressions.RegexOptions.IgnoreCase).Groups[1].Value.Trim();
+ string? parsedWavPackInfo,parsedWavPackMode;
+ public string WavPackMode
+ {
+  get
+  {
+   if(string.IsNullOrEmpty(WavPackInfo))return "";
+   if(parsedWavPackInfo!=WavPackInfo)
+   {
+    parsedWavPackMode=System.Text.RegularExpressions.Regex.Match(WavPackInfo,@"^modalities:\s*(.+)$",System.Text.RegularExpressions.RegexOptions.Multiline|System.Text.RegularExpressions.RegexOptions.IgnoreCase).Groups[1].Value.Trim();
+    parsedWavPackInfo=WavPackInfo;
+   }
+   return parsedWavPackMode??"";
+  }
+ }
  public int SampleRate {get;set;} public int Bits {get;set;} public int Channels {get;set;}
  public int DsdRate {get;set;}
  [System.Text.Json.Serialization.JsonIgnore] public bool IsDsd=>System.IO.Path.GetExtension(Path).ToLowerInvariant() is ".dsf" or ".dff"||Codec.StartsWith("dsd",StringComparison.OrdinalIgnoreCase)||Codec.Equals("dst",StringComparison.OrdinalIgnoreCase);
@@ -97,13 +110,28 @@ public sealed class LibraryStore : IDisposable
  {
   var covers=System.IO.Path.Combine(directory,"covers");
   var localCovers=Directory.Exists(covers)?Directory.EnumerateFiles(covers).ToDictionary(p=>System.IO.Path.GetFileName(p)!,p=>p,StringComparer.OrdinalIgnoreCase):new Dictionary<string,string>(StringComparer.OrdinalIgnoreCase);
-  using var cmd=db.CreateCommand();cmd.CommandText="SELECT json FROM tracks";using var r=cmd.ExecuteReader();
+  using var cmd=db.CreateCommand();cmd.CommandText="PRAGMA encoding";
+  bool utf8=string.Equals(cmd.ExecuteScalar() as string,"UTF-8",StringComparison.OrdinalIgnoreCase);
+  cmd.CommandText=utf8?"SELECT CAST(json AS BLOB) FROM tracks":"SELECT json FROM tracks";using var r=cmd.ExecuteReader();
   var tracks=new Dictionary<string,Track>(StringComparer.OrdinalIgnoreCase);
+  // Common immutable tags (artist, album, year, codec, etc.) can share one
+  // instance across tracks. Keep the lookup bounded even with unique tags.
+  var commonFields=new HashSet<MetadataField>();
   while(r.Read())try
   {
-   var t=JsonSerializer.Deserialize<Track>(r.GetString(0));if(t==null||string.IsNullOrWhiteSpace(t.Path))continue;
+   var t=utf8?JsonSerializer.Deserialize<Track>(r.GetFieldValue<byte[]>(0)):JsonSerializer.Deserialize<Track>(r.GetString(0));
+   if(t==null||string.IsNullOrWhiteSpace(t.Path))continue;
    t.Title??="";t.Artist??="";t.Album??="";t.AlbumArtist??=t.Artist;t.Cover??="";t.Codec??="";t.SampleFormat??="";t.WavPackInfo??="";t.ProbeJson??="";t.BitRateSource??="";t.SourcePath??="";t.CueSheetPath??="";t.AlbumEditionKey??="";t.EditionLabel??="";t.FileSignature??="";
-   t.Fields=(t.Fields??[]).Where(f=>f!=null).Select(f=>new MetadataField(f.Key??"",f.Value??"")).ToList();
+   t.Fields??=[];
+   t.Fields.RemoveAll(f=>f==null);
+   for(int i=0;i<t.Fields.Count;i++)
+   {
+    var field=t.Fields[i];
+    if(field.Key==null||field.Value==null)t.Fields[i]=field=new(field.Key??"",field.Value??"");
+    if(field.Value.Length>96)continue;
+    if(commonFields.TryGetValue(field,out var existing))t.Fields[i]=existing;
+    else if(commonFields.Count<8192)commonFields.Add(field);
+   }
    if(!double.IsFinite(t.Seconds)||t.Seconds<0||t.Seconds>1e9)t.Seconds=0;
    if(localCovers.TryGetValue(System.IO.Path.GetFileName(t.Cover),out var relocated))t.Cover=relocated;
    if(!tracks.TryGetValue(t.Path,out var prior)||t.Modified>=prior.Modified)tracks[t.Path]=t;

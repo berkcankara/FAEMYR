@@ -1,6 +1,6 @@
 # Faemyr — Local Music Player
 
-Faemyr is a customizable, local-first music player for Windows, combining high-resolution audio with a modern modular interface and a personal music library. Current version: **0.10.49**.
+Faemyr is a customizable, local-first music player for Windows, combining high-resolution audio with a modern modular interface and a personal music library. Current version: **0.10.53**.
 
 Faemyr plays the music files on your computer. Library scanning, artwork and audio visualization work locally. Optional online lyrics, artist photographs and Wikipedia summaries require an internet connection. The interface is available in English and Turkish.
 
@@ -61,6 +61,6 @@ The external command-line tools used during playback belong in `App/tools`: `ffm
 
 ## Distribution and licenses
 
-The repository contains source code, icon assets and third-party license notices, not your music library or personal application data. Large downloadable packages are distributed through GitHub Releases. This repository is private; only authorized GitHub accounts can access the downloads.
+The repository contains source code, icon assets and third-party license notices, not your music library or personal application data. Large downloadable packages are distributed through GitHub Releases. 
 
 The application and installer are not digitally signed. The current packages are development distributions; the corresponding source provision and license notices for third-party components must be completed before public binary distribution. See [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) and [licenses](licenses). No separate open-source license has been chosen for Faemyr's own source code; third-party licenses apply to their respective components.

@@ -23,15 +23,30 @@ public sealed class ArtistPhotoView:ThumbnailImage
  public static readonly DependencyProperty FallbackProperty=DependencyProperty.Register(nameof(Fallback),typeof(string),typeof(ArtistPhotoView),new PropertyMetadata(null,Changed));
  public string Artist{get=>(string)GetValue(ArtistProperty);set=>SetValue(ArtistProperty,value);}
  public string? Fallback{get=>(string?)GetValue(FallbackProperty);set=>SetValue(FallbackProperty,value);}
- int request;
- public ArtistPhotoView(){Loaded+=(_,_)=>{ArtistPhotos.Changed+=RefreshName;Refresh();};Unloaded+=(_,_)=>{request++;ArtistPhotos.Changed-=RefreshName;};}
- static void Changed(DependencyObject node,DependencyPropertyChangedEventArgs args){var view=(ArtistPhotoView)node;if(view.IsLoaded)view.Refresh();}
- void RefreshName(string name){if(name.Length==0||ArtistPhotoStore.Identity(name).Equals(ArtistPhotoStore.Identity(Artist),StringComparison.OrdinalIgnoreCase))Refresh();}
+ int request;bool refreshScheduled;
+ public ArtistPhotoView(){Loaded+=(_,_)=>{ArtistPhotos.Changed+=RefreshName;ScheduleRefresh();};Unloaded+=(_,_)=>{request++;ArtistPhotos.Changed-=RefreshName;};}
+ static void Changed(DependencyObject node,DependencyPropertyChangedEventArgs args){var view=(ArtistPhotoView)node;view.request++;if(args.Property==ArtistProperty){view.Path=null;view.ToolTip=null;}if(view.IsLoaded)view.ScheduleRefresh();}
+ void RefreshName(string name){if(name.Length==0||ArtistPhotoStore.Identity(name).Equals(ArtistPhotoStore.Identity(Artist),StringComparison.OrdinalIgnoreCase))ScheduleRefresh();}
+ void ScheduleRefresh()
+ {
+  if(refreshScheduled)return;refreshScheduled=true;
+  Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background,new Action(()=>{refreshScheduled=false;if(IsLoaded)Refresh();}));
+ }
  async void Refresh()
  {
-  int generation=++request;string artist=Artist;Path=Fallback;ToolTip=null;
-  if(!ArtistPhotos.Preferences.OnCards||!ArtistPhotos.Allowed(artist))return;
-  try{var record=await ArtistPhotos.Get(artist);if(IsLoaded&&generation==request&&Artist==artist&&ArtistPhotos.Allowed(artist)){Path=ArtistPhotos.Store.ImagePath(record)??Fallback;ToolTip=record is {File.Length:>0}?record.Credit:null;}}catch(OperationCanceledException){}
+  int generation=++request;string artist=Artist;string? fallback=Fallback;
+  if(!ArtistPhotos.Preferences.OnCards||!ArtistPhotos.Allowed(artist)){Path=fallback;ToolTip=null;return;}
+  try
+  {
+   var store=ArtistPhotos.Store;var enabled=ArtistPhotos.Preferences.Enabled;
+   // Prefer a saved portrait immediately instead of decoding the album cover
+   // and then replacing it every time a recycled card returns to view.
+   var saved=await Task.Run(()=>{var photo=store.Cached(artist);return (Photo:photo,Path:store.ImagePath(photo));});
+   if(!IsLoaded||generation!=request||Artist!=artist)return;
+   Path=saved.Path??fallback;ToolTip=saved.Path!=null?saved.Photo?.Credit:null;
+   if(!enabled||saved.Photo is {} cached&&cached.RetryAfter>DateTimeOffset.UtcNow&&(cached.File.Length==0||saved.Path!=null))return;
+   var record=await store.Get(artist);if(IsLoaded&&generation==request&&Artist==artist&&ArtistPhotos.Allowed(artist)){Path=store.ImagePath(record)??fallback;ToolTip=record is {File.Length:>0}?record.Credit:null;}
+  }catch(OperationCanceledException){}
  }
 }
 public partial class MainWindow

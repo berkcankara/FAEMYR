@@ -8,7 +8,12 @@ public static class PlayerJson
  public static void Write<T>(string path,T value)
  {
   Directory.CreateDirectory(Path.GetDirectoryName(path)!);string temporary=path+"."+Guid.NewGuid().ToString("N")+".tmp";
-  try{File.WriteAllText(temporary,JsonSerializer.Serialize(value));File.Move(temporary,path,true);}finally{if(File.Exists(temporary))File.Delete(temporary);}
+  try
+  {
+   using(var stream=File.Create(temporary))JsonSerializer.Serialize(stream,value);
+   File.Move(temporary,path,true);
+  }
+  finally{if(File.Exists(temporary))File.Delete(temporary);}
  }
 }
 public sealed class PlayerPreferences
@@ -41,8 +46,15 @@ public sealed class PlayerSession
  public static PlayerSession? Load(string path){var s=PlayerJson.Read<PlayerSession>(path);return s?.Version==1&&s.Queue!=null?s:null;}
  public (List<Track> Queue,int Index,Track? Current,double Seconds) Resolve(IEnumerable<Track> library,Func<string,bool>? exists=null)
  {
-  exists??=File.Exists;var lookup=library.GroupBy(t=>t.Path,StringComparer.OrdinalIgnoreCase).ToDictionary(g=>g.Key,g=>g.First(),StringComparer.OrdinalIgnoreCase);
-  Track? Find(string? path)=>path!=null&&lookup.TryGetValue(path,out var t)&&exists(t.AudioPath)?t:null;
+  exists??=File.Exists;var lookup=new Dictionary<string,Track>(StringComparer.OrdinalIgnoreCase);
+  foreach(var track in library)lookup.TryAdd(track.Path,track);
+  var availability=new Dictionary<string,bool>(StringComparer.OrdinalIgnoreCase);
+  Track? Find(string? path)
+  {
+   if(path==null||!lookup.TryGetValue(path,out var t))return null;
+   if(!availability.TryGetValue(t.AudioPath,out bool present))availability[t.AudioPath]=present=exists(t.AudioPath);
+   return present?t:null;
+  }
   var queue=new List<Track>();int index=-1;
   for(int i=0;i<Queue.Count;i++)if(Find(Queue[i]) is {} t){if(i==QueueIndex)index=queue.Count;queue.Add(t.Copy());}
   var current=Find(TrackPath);

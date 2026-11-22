@@ -29,14 +29,18 @@ public partial class MainWindow
  }
  void Mute_Click(object sender,RoutedEventArgs e){if(audio.IsDop)return;playerPreferences.Muted=!playerPreferences.Muted;ApplyVolume();}
  void ApplyVolume(){audio.Volume=playerPreferences.Volume;audio.Muted=playerPreferences.Muted;UpdateVolumeControls();volumeSaveTimer.Stop();volumeSaveTimer.Start();}
+ (double Volume,bool Muted,bool Dop,string Language)? displayedVolume;
  void UpdateVolumeControls()
  {
-  if(!playerInitialized)return;bool silent=playerPreferences.Muted||playerPreferences.Volume==0;
+  if(!playerInitialized)return;
+  if(audio.IsPlaying||audio.IsPaused)SetSignal(audio.Signal+(now?.WavPackMode.Length>0?"\nWavPack: "+now.WavPackMode:""));
+  var state=(playerPreferences.Volume,playerPreferences.Muted,audio.IsDop,L.Current);
+  if(displayedVolume==state)return;displayedVolume=state;
+  bool silent=playerPreferences.Muted||playerPreferences.Volume==0;
   VolumeIcon.Icon=silent?"muted":"volume";VolumeLabel.Text=playerPreferences.Muted?L.T("Sessiz"):$"{playerPreferences.Volume*100:0}%";
   string hint=audio.IsDop?L.T("DoP: ses seviyesi DAC üzerinden ayarlanır."):playerPreferences.Muted?L.T("Sesi aç"):L.T($"Ses seviyesi: %{playerPreferences.Volume*100:0}");
   MuteButton.IsEnabled=VolumeSlider.IsEnabled=!audio.IsDop;MuteButton.ToolTip=hint;VolumeSlider.ToolTip=hint;
   System.Windows.Automation.AutomationProperties.SetName(MuteButton,playerPreferences.Muted?L.T("Sesi aç"):L.T("Sessize al"));
-  if(audio.IsPlaying||audio.IsPaused)SetSignal(audio.Signal+(now?.WavPackMode.Length>0?"\nWavPack: "+now.WavPackMode:""));
  }
  void SavePlayerPreferences(){try{PlayerJson.Write(PlayerSettingsPath,playerPreferences);}catch(Exception ex)when(ex is IOException or UnauthorizedAccessException){Status.Text=L.T("Oynatıcı ayarları kaydedilemedi: ")+ex.Message;}}
  static ScrollViewer? FindScroll(DependencyObject? node)
@@ -56,9 +60,9 @@ public partial class MainWindow
   void Save(){try{PlayerJson.Write(SessionPath,snapshot);}catch(Exception ex)when(ex is IOException or UnauthorizedAccessException){/* A read-only directory must not interrupt playback. */}}
   if(closing){sessionWrite.GetAwaiter().GetResult();Save();}else sessionWrite=Task.Run(Save);
  }
- void RestoreSession(PlayerSession? saved)
+ void RestoreSession(PlayerSession saved,(List<Track> Queue,int Index,Track? Current,double Seconds) resolved)
  {
-  if(saved==null){sessionReady=true;return;}var resolved=saved.Resolve(library);queue.Clear();queue.AddRange(resolved.Queue);queueIndex=resolved.Index;
+  queue.Clear();queue.AddRange(resolved.Queue);queueIndex=resolved.Index;
   now=resolved.Current;resumePrepared=now!=null;resumeSeconds=resolved.Seconds;
   order.Repeat=Enum.IsDefined(saved.Repeat)?saved.Repeat:RepeatMode.Off;order.SetShuffle(saved.Shuffle,queue.Count,queueIndex);
   if(saved.Order is {} state&&resolved.Queue.Count==saved.Queue.Count&&state.History!=null&&state.Remaining!=null&&state.Priority!=null&&state.History.Concat(state.Remaining).Concat(state.Priority).All(i=>i>=0&&i<queue.Count)&&Enum.IsDefined(state.Repeat))order.Restore(state);

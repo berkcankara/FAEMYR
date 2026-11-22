@@ -7,6 +7,9 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Automation;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using Ellipse=System.Windows.Shapes.Ellipse;
+using System.Windows.Threading;
 
 namespace Faemyr;
 
@@ -93,6 +96,48 @@ public static class GallerySectionsTests
     finally{dialog?.Close();done.SetResult();}
    }));
    typeof(MainWindow).GetMethod("OpenSettings",BindingFlags.Instance|BindingFlags.NonPublic)!.Invoke(window,["appearance"]);await done.Task;if(dialogFailure!=null)throw dialogFailure;
+   // A gallery large enough to exceed the old 128-image cache, with
+   // differently sized letter sections and a partially filled final row.
+   var coverFile=Path.Combine(directory,"gallery-art.png");
+   var bitmap=BitmapSource.Create(320,320,96,96,PixelFormats.Bgra32,null,new byte[320*320*4],320*4);
+   var encoder=new PngBitmapEncoder();encoder.Frames.Add(BitmapFrame.Create(bitmap));using(var output=File.Create(coverFile))encoder.Save(output);
+   var covers=Enumerable.Range(0,277).Select(i=>Path.Combine(directory,"art-"+i+".png")).ToArray();
+   foreach(var file in covers)File.Copy(coverFile,file,true);
+   var first=await ThumbnailCache.Load(covers[0]);
+   foreach(var file in covers.Skip(1))await ThumbnailCache.Load(file);
+   Check(first!=null&&ReferenceEquals(first,await ThumbnailCache.Load(covers[0]))&&ThumbnailCache.CachedBytes<=ThumbnailCache.MemoryBudget,"277 album thumbnails remain warm within the byte-bounded cache after scrolling through the library");
+   Check(SmoothScroll.WheelTarget(940,1000,-96,1000,true)==844&&SmoothScroll.WheelTarget(60,0,96,1000,true)==156,"A reverse wheel tick responds immediately rather than consuming pending momentum");
+   var newAlbums=Field<ListBox>(window,"Albums");var newArtists=Field<ListBox>(window,"Artists");
+   string Name(int index)=>((char)('A'+index/13%26)).ToString()+" "+index.ToString("D3");
+   async Task VerifyScroll(ListBox list)
+   {
+    window.UpdateLayout();var scroll=Visuals(list).OfType<ScrollViewer>().First();var panel=Visuals(list).OfType<GalleryVirtualizingPanel>().First();
+    await window.Dispatcher.InvokeAsync(()=>{},DispatcherPriority.ApplicationIdle);
+    scroll.ScrollToBottom();window.UpdateLayout();await window.Dispatcher.InvokeAsync(()=>{},DispatcherPriority.ApplicationIdle);window.UpdateLayout();
+    double bottom=scroll.VerticalOffset;Check(bottom>1000&&Math.Abs(bottom-scroll.ScrollableHeight)<3,"Large gallery reaches its genuine bottom");
+    double previous=bottom;
+    for(int i=0;i<12;i++)
+    {
+     scroll.ScrollToVerticalOffset(Math.Max(0,previous-96));window.UpdateLayout();await window.Dispatcher.InvokeAsync(()=>{},DispatcherPriority.ApplicationIdle);window.UpdateLayout();
+     Check(scroll.VerticalOffset<previous+.5,"Reverse scroll stays monotonic across categorized rows ("+previous+" to "+scroll.VerticalOffset+")");previous=scroll.VerticalOffset;
+    }
+    Check(bottom-previous>900&&panel.Children.Count<list.Items.Count,"Reverse scrolling spans multiple rows without realizing the full gallery");
+    var squares=Visuals(list).OfType<SquareGalleryImage>().Where(c=>c.ActualWidth>0).ToArray();
+    Check(squares.Length>0&&squares.All(c=>Math.Abs(c.ActualWidth-c.ActualHeight)<1.5),"Recycled card artwork is square without a second width-driven layout");
+   }
+   Open("albums");newAlbums.ItemsSource=GallerySections.Rows(covers.Select((cover,i)=>new AlbumCard{Key=i.ToString(),Title=Name(i),Artist="Artist",Cover=cover,Count=1}),InterfaceSettings.Current.AlbumColumns,c=>c.Title);
+   await VerifyScroll(newAlbums);
+   var albumPanel=Visuals(newAlbums).OfType<GalleryVirtualizingPanel>().First();
+   double groupedHeight=albumPanel.ExtentHeight;
+   newAlbums.ItemsSource=newAlbums.Items.Cast<GalleryRow<AlbumCard>>().Select(row=>row with{Heading=""}).ToArray();
+   window.UpdateLayout();Check(albumPanel.ExtentHeight<groupedHeight,"Replacing the gallery with equally many rows refreshes its cached heading heights");
+   Open("artists");newArtists.ItemsSource=GallerySections.Rows(covers.Select((cover,i)=>new ArtistCard{Name=Name(i),Cover=cover,Albums=1,Tracks=1}),InterfaceSettings.Current.ArtistColumns,c=>c.Name);
+   await VerifyScroll(newArtists);
+   var order=Field<PlaybackOrder>(window,"order");var shuffleDot=Field<Ellipse>(window,"ShuffleActiveDot");var repeatDot=Field<Ellipse>(window,"RepeatActiveDot");
+   void Modes(bool shuffle,RepeatMode repeat){order.SetShuffle(shuffle,0,-1);order.Repeat=repeat;typeof(MainWindow).GetMethod("UpdateAccentControls",BindingFlags.Instance|BindingFlags.NonPublic)!.Invoke(window,null);}
+   Modes(false,RepeatMode.Off);Check(shuffleDot.Visibility==Visibility.Hidden&&repeatDot.Visibility==Visibility.Hidden,"Inactive playback modes show no marker");
+   Modes(true,RepeatMode.All);Check(shuffleDot.Visibility==Visibility.Visible&&repeatDot.Visibility==Visibility.Visible,"Both active playback modes show accent markers in the main player");
+   Modes(false,RepeatMode.One);Check(shuffleDot.Visibility==Visibility.Hidden&&repeatDot.Visibility==Visibility.Visible,"Repeat-one remains marked independently of shuffle");
    Check(!Field<AudioEngine>(window,"audio").DeviceStarted,"Gallery and appearance changes never start audio playback");
   }
   finally{window?.Close();File.WriteAllText(Path.Combine(directory,"gallery-sections-results.json"),JsonSerializer.Serialize(checks,new JsonSerializerOptions{WriteIndented=true}));}

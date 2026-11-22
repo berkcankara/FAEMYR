@@ -6,6 +6,7 @@ public sealed class PlaybackPlan
 {
  readonly Track[] tracks;readonly PlaybackOrder order;readonly Func<Track,GainDecision> gain;int index;readonly bool gapless;
  public PlaybackPlan(IEnumerable<Track> tracks,int index,PlaybackOrder order,Func<Track,GainDecision> gain,bool gapless=true){this.tracks=tracks.ToArray();this.index=index;this.order=order.Clone();this.gain=gain;this.gapless=gapless;}
+ public GainDecision GainFor(Track track)=>gain(track);
  public PlaybackEntry? Next()
  {
   if(!gapless)return null;index=order.Next(tracks.Length,index,true);if(index<0)return null;var track=tracks[index];return new(track,index,gain(track),order.Capture(),TimeSpan.Zero);

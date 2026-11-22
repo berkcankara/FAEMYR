@@ -7,7 +7,13 @@ public sealed class ListeningStats
 public sealed class ListeningStore
 {
  readonly string path;readonly Dictionary<string,ListeningStats> entries;bool dirty;
- public ListeningStore(string directory){path=Path.Combine(directory,"listening-history.json");entries=new(PlayerJson.Read<Dictionary<string,ListeningStats>>(path)??[],StringComparer.OrdinalIgnoreCase);}
+ public ListeningStore(string directory)
+ {
+  path=Path.Combine(directory,"listening-history.json");entries=new(StringComparer.OrdinalIgnoreCase);
+  var saved=PlayerJson.Read<Dictionary<string,ListeningStats>>(path);if(saved==null)return;
+  foreach(var (key,value) in saved)
+   if(value!=null&&(!entries.TryGetValue(key,out var other)||Nullable.Compare(value.LastPlayed,other.LastPlayed)>0))entries[key]=value;
+ }
  public ListeningStats Get(Track track)
  {
   if(!entries.TryGetValue(track.Path,out var value)){entries[track.Path]=value=new(){AddedAt=track.AddedAt> DateTimeOffset.UnixEpoch?track.AddedAt:DateTimeOffset.UtcNow};dirty=true;}return value;
@@ -20,7 +26,7 @@ public sealed class ListeningStore
 public partial class MainWindow
 {
  ListeningStore listening=null!;PlaybackPreferences playbackPreferences=new();Track? listeningTrack;double listened,lastListenPosition;bool listenCounted;DateTimeOffset lastHistorySave=DateTimeOffset.UtcNow;
- void InitializeListening(){listening=new(Paths.Data);playbackPreferences=PlayerJson.Read<PlaybackPreferences>(Path.Combine(Paths.Data,"playback-settings.json"))??new();}
+ void InitializeListening(){playbackPreferences=PlayerJson.Read<PlaybackPreferences>(Path.Combine(Paths.Data,"playback-settings.json"))??new();}
  void BeginListening(Track track){listeningTrack=track;listened=0;listenCounted=false;lastListenPosition=audio.Position.TotalSeconds;listening.Get(track);}
  void UpdateListening()
  {

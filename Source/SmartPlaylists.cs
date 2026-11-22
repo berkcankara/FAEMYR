@@ -8,10 +8,10 @@ public static class TrackQuery
 {
  public static string Help=>L.T("Sözcük veya tırnak içindeki ifadelerle ara. Koşullar birlikte uygulanır.\n\nartist:Metallica\nalbum:\"Bad Apple!!\"\nformat:flac\nyear:1990..2000\nbits:>=24 rate:>=96000\nrating:>=4\nplays:0\nadded:30d\nplayed:never\nfavorite:true\nmissing:true\nduration:<300\n\nSüre saniye, örnekleme oranı Hz olarak yazılır. added:30d son 30 günde eklenenlerdir. -artist:Deneme koşulu dışlar.");
  public static int Year(Track t)=>AlbumSorting.Year([t]);
- static bool Numeric(double actual,string value)
+ static Func<double,bool> Numeric(string value)
  {
-  var range=value.Split("..",StringSplitOptions.None);if(range.Length==2&&double.TryParse(range[0],NumberStyles.Float,CultureInfo.InvariantCulture,out double low)&&double.TryParse(range[1],NumberStyles.Float,CultureInfo.InvariantCulture,out double high))return actual>=low&&actual<=high;
-  var match=Regex.Match(value,@"^(>=|<=|>|<|=)?([0-9]+(?:\.[0-9]+)?)$");if(!match.Success)throw new FormatException(L.T("Sayısal filtre geçersiz: ")+value);double n=double.Parse(match.Groups[2].Value,CultureInfo.InvariantCulture);return match.Groups[1].Value switch{">="=>actual>=n,"<="=>actual<=n,">"=>actual>n,"<"=>actual<n,_=>actual==n};
+  var range=value.Split("..",StringSplitOptions.None);if(range.Length==2&&double.TryParse(range[0],NumberStyles.Float,CultureInfo.InvariantCulture,out double low)&&double.TryParse(range[1],NumberStyles.Float,CultureInfo.InvariantCulture,out double high))return actual=>actual>=low&&actual<=high;
+  var match=Regex.Match(value,@"^(>=|<=|>|<|=)?([0-9]+(?:\.[0-9]+)?)$");if(!match.Success)throw new FormatException(L.T("Sayısal filtre geçersiz: ")+value);double n=double.Parse(match.Groups[2].Value,CultureInfo.InvariantCulture);return match.Groups[1].Value switch{">="=>actual=>actual>=n,"<="=>actual=>actual<=n,">"=>actual=>actual>n,"<"=>actual=>actual<n,_=>actual=>actual==n};
  }
  static bool Contains(string text,string value)=>text.Contains(value,StringComparison.CurrentCultureIgnoreCase);
  public static Func<Track,bool> Compile(string query,ListeningStore? history,out string error)
@@ -27,7 +27,7 @@ public static class TrackQuery
      case "artist":test=t=>Contains(t.Artist+" "+t.AlbumArtist,value);break;case "album":test=t=>Contains(t.Album,value);break;
      case "format":test=t=>Contains(t.Codec,value)||System.IO.Path.GetExtension(t.AudioPath).TrimStart('.').Equals(value,StringComparison.OrdinalIgnoreCase);break;
      case "year":case "bits":case "rate":case "rating":case "plays":case "duration":
-      _=Numeric(0,value);test=t=>Numeric(field switch{"year"=>Year(t),"bits"=>t.Bits,"rate"=>t.SampleRate,"rating"=>t.Rating,"plays"=>stats(t).PlayCount,_=>t.Seconds},value);break;
+      var compare=Numeric(value);test=t=>compare(field switch{"year"=>Year(t),"bits"=>t.Bits,"rate"=>t.SampleRate,"rating"=>t.Rating,"plays"=>stats(t).PlayCount,_=>t.Seconds});break;
      case "favorite":case "missing":if(!bool.TryParse(value,out bool flag))throw new FormatException("true veya false kullan: "+field);test=t=>(field=="favorite"?t.IsFavorite:!File.Exists(t.AudioPath))==flag;break;
      case "added":if(!int.TryParse(value.TrimEnd('d','D'),out int days)||days<0)throw new FormatException(L.T("Eklenme filtresi için gün sayısı kullan: added:30d"));var since=DateTimeOffset.UtcNow.AddDays(-Math.Min(days,365000));test=t=>stats(t).AddedAt>=since;break;
      case "played":if(!value.Equals("never",StringComparison.OrdinalIgnoreCase))throw new FormatException(L.T("Dinlenmemişler için played:never kullan."));test=t=>stats(t).PlayCount==0;break;
@@ -36,7 +36,9 @@ public static class TrackQuery
     if(match.Groups["not"].Value=="-"){var positive=test;test=t=>!positive(t);}terms.Add(test);
    }
   }catch(FormatException ex){error=ex.Message;return _=>false;}
-  return t=>terms.All(test=>test(t));
+  if(terms.Count==0)return static _=>true;
+  if(terms.Count==1)return terms[0];
+  return track=>{foreach(var term in terms)if(!term(track))return false;return true;};
  }
  public static List<Track> Sort(IEnumerable<Track> tracks,string mode,ListeningStore? history)=>mode switch
  {

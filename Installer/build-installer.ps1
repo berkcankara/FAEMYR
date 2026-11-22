@@ -24,7 +24,7 @@ foreach($file in (Get-ChildItem -LiteralPath $appRoot -Recurse -File)){
  [void](New-Item -ItemType Directory -Path (Split-Path $target) -Force)
  Copy-Item -LiteralPath $file.FullName -Destination $target
 }
-foreach($required in @('Faemyr.exe','Faemyr.dll','coreclr.dll','PresentationFramework.dll','tools/ffmpeg.exe','tools/ffprobe.exe','tools/wvunpack.exe')){
+foreach($required in @('Faemyr.exe','Faemyr.dll','Faemyr-brand-v2.ico','coreclr.dll','PresentationFramework.dll','tools/ffmpeg.exe','tools/ffprobe.exe','tools/wvunpack.exe')){
  if(-not(Test-Path -LiteralPath (Join-Path $payload $required))){throw ('Missing required payload file: '+$required)}
 }
 $notice=Get-Content -LiteralPath (Join-Path $repoRoot 'THIRD-PARTY-NOTICES.md') -Raw

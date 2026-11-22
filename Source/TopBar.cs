@@ -62,12 +62,15 @@ public partial class MainWindow
   UpdateSearchFilterIndicator();
  }
  void UpdateSearchFilterIndicator()=>SearchFilterDot.Visibility=Visible(Search.Text.Length>0&&!topSearchExpanded);
+ (string Language,string View,bool Expanded,bool Filtered,bool CanGoBack,bool Panel,string? Title,string? Artist)? displayedTopBar;
  void UpdateTopBarState()
  {
   if(!topBarReady)return;
+  bool shown=InterfaceSettings.Current.ShowRightPanel,canGoBack=navigationHistory.Count>0&&settingsWindow==null;
+  var state=(L.Current,view,topSearchExpanded,Search.Text.Length>0,canGoBack,shown,now?.Title,now?.Artist);
+  if(displayedTopBar==state)return;displayedTopBar=state;
   UpdateSearchPrompt();
-  BackButton.ToolTip=L.T("Geri")+" · Alt+←";AutomationProperties.SetName(BackButton,L.T("Geri"));BackButton.IsEnabled=navigationHistory.Count>0&&settingsWindow==null;
-  bool shown=InterfaceSettings.Current.ShowRightPanel;
+  BackButton.ToolTip=L.T("Geri")+" · Alt+←";AutomationProperties.SetName(BackButton,L.T("Geri"));BackButton.IsEnabled=canGoBack;
   string panelLabel=L.T(shown?"Sağ paneli gizle":"Sağ paneli göster");ToggleDetailsButton.ToolTip=panelLabel;AutomationProperties.SetName(ToggleDetailsButton,panelLabel);ToggleDetailsGlyph.PanelShown=shown;
   TopNowPlaying.Visibility=Visible(!shown&&now!=null);TopNowPlaying.ToolTip=now==null?null:now.Title+"\n"+now.Artist;
   UpdateTopBarBounds();

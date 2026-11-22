@@ -44,6 +44,7 @@ public partial class MainWindow
    var snapshot=library.Select(t=>t.Copy()).ToArray();var folders=(roots??store.Roots()).ToArray();
    var missing=await Task.Run(()=>LibraryPresence.FindMissing(snapshot,folders,ct),ct);
    if(closed)return;ct.ThrowIfCancellationRequested();
+   if(missing.Count==0)return;
    // A rename/import may have replaced a row while the background check ran.
    var currentRows=library.ToDictionary(t=>t.Path,StringComparer.OrdinalIgnoreCase);
    var keys=missing.Where(old=>currentRows.TryGetValue(old.Path,out var t)&&t.Modified==old.Modified&&t.AudioPath.Equals(old.AudioPath,StringComparison.OrdinalIgnoreCase)&&t.CueSheetPath.Equals(old.CueSheetPath,StringComparison.OrdinalIgnoreCase))

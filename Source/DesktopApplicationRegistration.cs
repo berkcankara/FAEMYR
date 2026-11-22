@@ -44,6 +44,8 @@ public static class DesktopApplicationRegistration
   {
    if(string.IsNullOrWhiteSpace(programs)||!Path.IsPathFullyQualified(programs)||!Path.IsPathFullyQualified(executable)||!File.Exists(executable))return new(false,false,shortcut,"The application or Programs folder is unavailable.");
    executable=Path.GetFullPath(executable);string folder=Path.Combine(programs,"Faemyr");shortcut=Path.Combine(folder,"Faemyr.lnk");
+   // A distinct icon filename avoids the Shell reusing the older executable icon cache.
+   string iconPath=Path.Combine(Path.GetDirectoryName(executable)!,AppBrand.ShortcutIcon);if(!File.Exists(iconPath))iconPath=executable;
    native=new ShellLinkObject();var link=(IShellLink)native;var persist=(IPersistFile)native;
    bool existed=File.Exists(shortcut);
    if(existed)
@@ -52,11 +54,11 @@ public static class DesktopApplicationRegistration
     {
      persist.Load(shortcut,0);var target=new StringBuilder(32768);var icon=new StringBuilder(32768);var args=new StringBuilder(32768);
      link.GetPath(target,target.Capacity,IntPtr.Zero,4);link.GetIconLocation(icon,icon.Capacity,out int index);link.GetArguments(args,args.Capacity);
-     if(target.ToString().Equals(executable,StringComparison.OrdinalIgnoreCase)&&icon.ToString().Equals(executable,StringComparison.OrdinalIgnoreCase)&&index==0&&args.Length==0)return new(true,false,shortcut);
+     if(target.ToString().Equals(executable,StringComparison.OrdinalIgnoreCase)&&icon.ToString().Equals(iconPath,StringComparison.OrdinalIgnoreCase)&&index==0&&args.Length==0)return new(true,false,shortcut);
     }
     catch(COMException){/* Repair an incomplete shortcut in Faemyr's own folder. */}
    }
-   Directory.CreateDirectory(folder);link.SetPath(executable);link.SetArguments("");link.SetWorkingDirectory(Path.GetDirectoryName(executable)!);link.SetDescription("Faemyr");link.SetIconLocation(executable,0);link.SetShowCmd(1);persist.Save(shortcut,true);
+   Directory.CreateDirectory(folder);link.SetPath(executable);link.SetArguments("");link.SetWorkingDirectory(Path.GetDirectoryName(executable)!);link.SetDescription("Faemyr");link.SetIconLocation(iconPath,0);link.SetShowCmd(1);persist.Save(shortcut,true);
    if(notify)SHChangeNotify(existed?0x00002000u:0x00000002u,0x0005,shortcut,IntPtr.Zero); // UPDATEITEM / CREATE, SHCNF_PATHW
    return new(true,true,shortcut);
   }

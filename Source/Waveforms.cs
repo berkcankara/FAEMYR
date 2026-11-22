@@ -13,7 +13,13 @@ public sealed class WaveformData
  public float[] Low {get;set;}=[];
  public float[] Mid {get;set;}=[];
  public float[] High {get;set;}=[];
- public bool Valid=>Version==1&&Low.Length==192&&Mid.Length==192&&High.Length==192&&Low.Concat(Mid).Concat(High).All(v=>float.IsFinite(v)&&v>=0&&v<=1);
+ public bool Valid=>Version==1&&ValidBand(Low)&&ValidBand(Mid)&&ValidBand(High);
+ static bool ValidBand(float[]? band)
+ {
+  if(band is not {Length:192})return false;
+  foreach(float value in band)if(!(value>=0&&value<=1))return false;
+  return true;
+ }
 }
 public static class WaveformAnalyzer
 {
@@ -74,6 +80,7 @@ public sealed class WaveformQueue : IDisposable
 {
  sealed class WorkItem(Track track){public Track Track{get;}=track;public bool Urgent,Running,Done;}
  readonly ConcurrentQueue<WorkItem> normal=new(),priority=new();readonly Dictionary<string,WorkItem> queued=new(StringComparer.OrdinalIgnoreCase);
+ readonly System.Runtime.CompilerServices.ConditionalWeakTable<Track,WorkItem> delivered=new();
  readonly SemaphoreSlim available=new(0);readonly CancellationTokenSource cancel=new();readonly string root;
  readonly Action<Track,WaveformData?,string> completed;
  readonly Func<Track,CancellationToken,Task<WaveformData>> analyze;
@@ -83,6 +90,7 @@ public sealed class WaveformQueue : IDisposable
   if(t.Waveform!=null||cancel.IsCancellationRequested)return;
   lock(queued)
   {
+   if(delivered.TryGetValue(t,out _))return;
    if(queued.TryGetValue(t.Path,out var prior)&&ReferenceEquals(prior.Track,t))
    {
     if(!urgent||prior.Urgent||prior.Running||prior.Done)return;
@@ -112,8 +120,9 @@ public sealed class WaveformQueue : IDisposable
     {
      if(!queued.TryGetValue(item.Track.Path,out var latest)||!ReferenceEquals(item,latest))continue;
      item.Done=true;
+     queued.Remove(item.Track.Path);
+     if(data!=null)delivered.Add(item.Track,item);
      completed(item.Track,data,error);
-     if(data==null)queued.Remove(item.Track.Path);
     }
    }
   }catch(OperationCanceledException){}

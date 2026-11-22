@@ -50,7 +50,22 @@ public static class ArtistCatalog
  public static IEnumerable<string> Names(Track t)=>(string.IsNullOrWhiteSpace(t.Artist)
   ?t.Fields.Where(f=>IsArtistField(f.Key)).SelectMany(f=>Credits(f.Value))
   :Credits(t.Artist)).Select(c=>c.Profile).Distinct(Identity);
- public static HashSet<string> ProfileNames(IEnumerable<Track> tracks)=>tracks.SelectMany(Names).ToHashSet(Identity);
+ static IEnumerable<(string Name,Track Track)> Profiles(IEnumerable<Track> tracks)
+ {
+  var namesByCredit=new Dictionary<string,string[]>(StringComparer.Ordinal);
+  foreach(var track in tracks)
+  {
+   if(string.IsNullOrWhiteSpace(track.Artist))
+   {
+    foreach(string name in Names(track))yield return(name,track);
+    continue;
+   }
+   if(!namesByCredit.TryGetValue(track.Artist,out var names))
+    namesByCredit[track.Artist]=names=Names(track).ToArray();
+   foreach(string name in names)yield return(name,track);
+  }
+ }
+ public static HashSet<string> ProfileNames(IEnumerable<Track> tracks)=>Profiles(tracks).Select(pair=>pair.Name).ToHashSet(Identity);
  public static bool Matches(Track t,string name)=>Names(t).Contains(name,Identity);
  public static HashSet<string> AlbumKeys(IEnumerable<Track> tracks,string name)=>tracks.Where(t=>Matches(t,name)).Select(t=>t.AlbumKey).ToHashSet(StringComparer.Ordinal);
  public static string? ResolveProfile(IEnumerable<Track> tracks,string label)
@@ -66,8 +81,7 @@ public static class ArtistCatalog
    .Select(artist=>artist.Name).Distinct(Identity).ToArray();
   return replacements.Length==1?replacements[0]:null;
  }
- public static List<ArtistCard> Cards(IEnumerable<Track> tracks,string query="")=>tracks
-  .SelectMany(t=>Names(t).Select(name=>(Name:name,Track:t))).GroupBy(x=>x.Name,Identity)
+ public static List<ArtistCard> Cards(IEnumerable<Track> tracks,string query="")=>Profiles(tracks).GroupBy(x=>x.Name,Identity)
   .Where(g=>query.Length==0||g.Key.Contains(query,StringComparison.CurrentCultureIgnoreCase))
   .OrderBy(g=>g.Key,StringComparer.CurrentCultureIgnoreCase)
   .Select(g=>new ArtistCard{Name=g.Key,Cover=g.Select(x=>x.Track.Cover).FirstOrDefault(System.IO.File.Exists),Albums=g.Select(x=>x.Track.AlbumKey).Distinct().Count(),Tracks=g.Count()}).ToList();

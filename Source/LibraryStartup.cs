@@ -18,14 +18,24 @@ public partial class MainWindow
    var loaded=await Task.Run(()=>
    {
     var database=new LibraryStore();
-    try{return (Store:database,Tracks:database.Load(),Favorites:new FavoriteStore(Paths.Data),Session:PlayerSession.Load(SessionPath));}catch{database.Dispose();throw;}
+    try
+    {
+     var tracks=database.Load();AlbumGrouping.Apply(tracks);
+     var savedFavorites=new FavoriteStore(Paths.Data);savedFavorites.MigrateAlbumEditions(tracks);
+     foreach(var track in tracks)savedFavorites.Apply(track);
+     var history=new ListeningStore(Paths.Data);history.Ensure(tracks);
+     var session=PlayerSession.Load(SessionPath);
+     var resolved=session?.Resolve(tracks);
+     return (Store:database,Tracks:tracks,Favorites:savedFavorites,History:history,Session:session,Resolved:resolved);
+    }
+    catch{database.Dispose();throw;}
    });
    if(closed){loaded.Store.Dispose();return;}
-   store=loaded.Store;favorites=loaded.Favorites;library.AddRange(loaded.Tracks);AlbumGrouping.Apply(library);favorites.MigrateAlbumEditions(library);listening.Ensure(library);foreach(var track in library)favorites.Apply(track);StartupMetrics.Mark("libraryLoaded");
+   store=loaded.Store;favorites=loaded.Favorites;listening=loaded.History;library.AddRange(loaded.Tracks);StartupMetrics.Mark("libraryLoaded");
    try
    {
     string path=Path.Combine(Paths.Data,"queue.json");
-    if(File.Exists(path))
+    if(loaded.Session==null&&File.Exists(path))
     {
      var saved=JsonSerializer.Deserialize<List<string>>(await File.ReadAllTextAsync(path))??[];
      if(closed)return;
@@ -42,7 +52,9 @@ public partial class MainWindow
     if(ReferenceEquals(inspectedTrack,track))ApplyPanelVisibility();
    }));
    order.Reset(queue.Count,queueIndex);libraryReady=true;WindowRoot.IsEnabled=true;
-   RestoreSession(loaded.Session);if(loaded.Session==null)RefreshView();StartupMetrics.Mark("viewBound");
+   if(loaded.Session!=null&&loaded.Resolved is {} resolved)RestoreSession(loaded.Session,resolved);
+   else{sessionReady=true;RefreshView();}
+   StartupMetrics.Mark("viewBound");
    await Dispatcher.InvokeAsync(()=>{},DispatcherPriority.ContextIdle);
    if(closed)return;
    // First-page thumbnails are included in the diagnostic, not just the empty shell.

@@ -49,9 +49,11 @@ public partial class MainWindow : Window
  }
  void RefreshView()
  {
-  if(Tracks==null||playlists==null||!libraryReady)return;RecordNavigation();UpdateNavigation();UpdateSearchPrompt();string query=Search.Text.Trim();IEnumerable<Track> filtered=library;
-  var queryMatch=TrackQuery.Compile(query,listening,out string queryError);filtered=filtered.Where(queryMatch);SmartFilterError.Text=queryError;SmartFilterError.Visibility=Visible(queryError.Length>0);
-  var list=filtered.ToList();bool favoriteAlbums=view=="favorites"&&favoritesTab=="albums",favoriteTracks=view=="favorites"&&!favoriteAlbums;bool gallery=view is "albums" or "artist"||favoriteAlbums,collection=view is "albums" or "artists" or "artist" or "playlists"||favoriteAlbums,hero=view is "album" or "playlist",profile=view=="artist";
+  if(Tracks==null||playlists==null||!libraryReady)return;searchDelay.Stop();RecordNavigation();UpdateNavigation();UpdateSearchPrompt();string query=Search.Text.Trim();
+  var queryMatch=TrackQuery.Compile(query,listening,out string queryError);
+  IEnumerable<Track> list=query.Length==0?library:library.Where(queryMatch);
+  SmartFilterError.Text=queryError;SmartFilterError.Visibility=Visible(queryError.Length>0);
+  bool favoriteAlbums=view=="favorites"&&favoritesTab=="albums",favoriteTracks=view=="favorites"&&!favoriteAlbums;bool gallery=view is "albums" or "artist"||favoriteAlbums,collection=view is "albums" or "artists" or "artist" or "playlists"||favoriteAlbums,hero=view is "album" or "playlist",profile=view=="artist";
   LibraryStats.Text=L.T($"{library.Count:N0} parça · {library.Select(t=>t.AlbumKey).Distinct().Count():N0} albüm · {TimeSpan.FromSeconds(library.Sum(t=>t.Seconds)).TotalHours:0.#} saat müzik");
   EmptyState.Visibility=Visible(library.Count==0&&view!="playlists"&&view!="playlist"&&view!="favorites");
   AlbumScroll.Visibility=Visible(gallery);ArtistScroll.Visibility=Visible(view=="artists");PlaylistScroll.Visibility=Visible(view=="playlists");Tracks.Visibility=Visible(!collection);
@@ -128,10 +130,22 @@ public partial class MainWindow : Window
   scanCts=new();var token=scanCts.Token;UpdateLibraryScanState();var errors=new List<string>();int done=0,added=0;
   try
   {
-   var files=await Task.Run(()=>roots.SelectMany(r=>Walk(r,errors.Add)).Distinct(StringComparer.OrdinalIgnoreCase).ToList(),token);
+   var files=await Task.Run(()=>
+   {
+    var result=new List<(string Path,long Modified,bool Cue)>();
+    foreach(var path in roots.SelectMany(r=>Walk(r,errors.Add)).Distinct(StringComparer.OrdinalIgnoreCase))
+    {
+     token.ThrowIfCancellationRequested();
+     try{result.Add((path,File.GetLastWriteTimeUtc(path).Ticks,path.EndsWith(".cue",StringComparison.OrdinalIgnoreCase)));}
+     catch(Exception ex)when(ex is IOException or UnauthorizedAccessException){errors.Add(path+": "+ex.Message);}
+    }
+    return result.OrderByDescending(file=>file.Cue).ToArray();
+   },token);
    var lookup=library.ToDictionary(t=>t.Path,StringComparer.OrdinalIgnoreCase);var covered=new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-   foreach(var path in files.OrderBy(p=>p.EndsWith(".cue",StringComparison.OrdinalIgnoreCase)?0:1)){token.ThrowIfCancellationRequested();if(covered.Contains(path))continue;done++;Status.Text=L.T($"Taranıyor {done:N0}/{files.Count:N0} · {System.IO.Path.GetFileName(path)}");
-    try{var modified=File.GetLastWriteTimeUtc(path).Ticks;if(!path.EndsWith(".cue",StringComparison.OrdinalIgnoreCase)&&lookup.TryGetValue(path,out var old)&&old.Modified==modified)continue;var tracks=await Task.Run(()=>ReadLibraryFile(path,token),token);if(closed)return;ApplyImportedTracks(path,tracks);foreach(var track in tracks){lookup[track.Path]=track;if(track.IsCue)covered.Add(track.AudioPath);}added+=tracks.Count;if(added%12==0)RefreshView();}
+   var progress=System.Diagnostics.Stopwatch.StartNew();var refresh=System.Diagnostics.Stopwatch.StartNew();
+   foreach(var (path,modified,cue) in files){token.ThrowIfCancellationRequested();if(covered.Contains(path))continue;done++;
+    if(done==1||progress.ElapsedMilliseconds>=120){Status.Text=L.T($"Taranıyor {done:N0}/{files.Length:N0} · {System.IO.Path.GetFileName(path)}");progress.Restart();}
+    try{if(!cue&&lookup.TryGetValue(path,out var old)&&old.Modified==modified)continue;var tracks=await Task.Run(()=>ReadLibraryFile(path,token),token);if(closed)return;ApplyImportedTracks(path,tracks);foreach(var track in tracks){lookup[track.Path]=track;if(track.IsCue)covered.Add(track.AudioPath);}added+=tracks.Count;if(refresh.ElapsedMilliseconds>=900){RefreshView();refresh.Restart();}}
     catch(OperationCanceledException){throw;}catch(Exception ex){errors.Add(path+": "+ex.Message);}
    }
    await ReconcileLibraryAsync(roots,token);
@@ -179,7 +193,13 @@ public partial class MainWindow : Window
    await Task.Yield();request.Token.ThrowIfCancellationRequested();
    string? wav=null;
    if(t.IsDsd){preferences.RequireDop(device);request.Token.ThrowIfCancellationRequested();audio.PlayDop(t.Path,device,preferences,startPosition);}
-   else{request.Token.ThrowIfCancellationRequested();if(closed)return;var gain=ReplayGain.Decide(t,preferences,gainStore.Get(t,preferences.ReplayGain,GainAlbum(t)));var entry=new PlaybackEntry(t,queueIndex,gain,order.Capture(),startPosition??TimeSpan.Zero){Id=continueListening&&audibleEntry!=null?audibleEntry.Id:Guid.NewGuid()};audio.PlayStreaming(entry,MakePlaybackPlan(t,preferences),device,exclusive,startPaused,preferences);}
+   else
+   {
+    request.Token.ThrowIfCancellationRequested();if(closed)return;
+    var plan=MakePlaybackPlan(t,preferences);
+    var entry=new PlaybackEntry(t,queueIndex,plan.GainFor(t),order.Capture(),startPosition??TimeSpan.Zero){Id=continueListening&&audibleEntry!=null?audibleEntry.Id:Guid.NewGuid()};
+    audio.PlayStreaming(entry,plan,device,exclusive,startPaused,preferences);
+   }
    now=t;audibleEntry=audio.CurrentEntry;if(!continueListening)BeginListening(t);resumePrepared=false;resumeSeconds=0;ShowTrackDetails(t);SyncPlaybackVisuals();SetSignal(audio.Signal+(t.WavPackMode.Length>0?"\nWavPack: "+t.WavPackMode:""));Status.Text=L.T("Çalıyor · ")+t.Quality;PlayIcon.Icon="pause";UpdateNextTrack();NotifyTrackChange();SaveSession(false);_=Task.Run(()=>AudioEngine.TrimCache(cache,wav));
   }catch(OperationCanceledException){}catch(Exception ex){if(!closed){SetSignal(L.T("Oynatma başlatılamadı"));Status.Text=ex.Message;MessageBox.Show(this,ex.Message,"Faemyr — oynatma",MessageBoxButton.OK,MessageBoxImage.Information);}}finally{if(ReferenceEquals(playCts,request))playCts=null;request.Dispose();}
  }

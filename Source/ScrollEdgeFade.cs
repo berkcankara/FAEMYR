@@ -22,25 +22,29 @@ public static class ScrollEdgeFade
   public Controller(FrameworkElement target){this.target=target;masked=target;original=target.OpacityMask;target.Loaded+=Loaded;target.SizeChanged+=Resized;Update();}
   void Loaded(object sender,RoutedEventArgs args)=>Update();
   void Resized(object sender,SizeChangedEventArgs args)=>Update();
-  void Scrolled(object sender,ScrollChangedEventArgs args){if(args.OriginalSource==scroll)Update();}
-  void Update()
+  void Scrolled(object sender,ScrollChangedEventArgs args){if(args.OriginalSource==scroll)Update(false);}
+  void Update(bool resolveViewer=true)
   {
    if(updating)return;updating=true;
    try
    {
-    var viewer=target as ScrollViewer;if(target is TextBox text){text.ApplyTemplate();viewer=text.Template?.FindName("PART_ContentHost",text) as ScrollViewer;}
-    if(target is ItemsControl items){items.ApplyTemplate();viewer=FindViewer(items);}
-    if(!ReferenceEquals(viewer,scroll)){if(scroll!=null)scroll.ScrollChanged-=Scrolled;scroll=viewer;if(scroll!=null)scroll.ScrollChanged+=Scrolled;previous=null;}
-    FrameworkElement viewport=target;
-    if(target is ItemsControl&&scroll!=null){scroll.ApplyTemplate();viewport=scroll.Template?.FindName("PART_ScrollContentPresenter",scroll) as FrameworkElement??target;}
-    if(!ReferenceEquals(masked,viewport)){StopAnimations();activeMask=null;masked.OpacityMask=original;masked=viewport;original=masked.OpacityMask;previous=null;}
-    double height=masked.ActualHeight;bool top=scroll!=null&&scroll.VerticalOffset>.5,bottom=scroll!=null&&scroll.ScrollableHeight-scroll.VerticalOffset>.5;var key=(Math.Round(height,1),top,bottom);if(previous==key)return;previous=key;
+    if(resolveViewer||scroll==null)
+    {
+     var viewer=target as ScrollViewer;if(target is TextBox text){text.ApplyTemplate();viewer=text.Template?.FindName("PART_ContentHost",text) as ScrollViewer;}
+     if(target is ItemsControl items){items.ApplyTemplate();viewer=FindViewer(items);}
+     if(!ReferenceEquals(viewer,scroll)){if(scroll!=null)scroll.ScrollChanged-=Scrolled;scroll=viewer;if(scroll!=null)scroll.ScrollChanged+=Scrolled;previous=null;}
+     FrameworkElement viewport=target;
+     if(target is ItemsControl&&scroll!=null){scroll.ApplyTemplate();viewport=scroll.Template?.FindName("PART_ScrollContentPresenter",scroll) as FrameworkElement??target;}
+     if(!ReferenceEquals(masked,viewport)){StopAnimations();activeMask=null;masked.OpacityMask=original;masked=viewport;original=masked.OpacityMask;previous=null;}
+    }
+    double height=masked.ActualHeight;bool top=scroll!=null&&scroll.VerticalOffset>.5,bottom=scroll!=null&&scroll.ScrollableHeight-scroll.VerticalOffset>.5;var key=(Math.Round(height,1),top,bottom);if(previous==key)return;var old=previous;previous=key;
     if(height<1){StopAnimations();activeMask=null;masked.OpacityMask=original;return;}
     // Fade the actual viewport to transparency, so any album gradient remains visible.
     // Keep the first/last line opaque when it reaches its real scroll boundary.
     double edge=Math.Min(.25,56/height);
     if(activeMask==null)
     {
+     old=null;
      var stops=new GradientStopCollection();
      for(int i=0;i<=8;i++)stops.Add(new(Colors.Black,edge*i/8d));
      for(int i=8;i>=0;i--)stops.Add(new(Colors.Black,1-edge*i/8d));
@@ -55,6 +59,7 @@ public static class ScrollEdgeFade
     {
      double t=(side==0?i:8-i)/8d;var stop=mask.GradientStops[side*9+i];
      stop.Offset=side==0?edge*t:1-edge*t;
+     if(old is {} state&&(side==0?state.Top==top:state.Bottom==bottom))continue;
      byte alpha=(byte)Math.Round(255*(1-Math.Cos(Math.PI*t))/2);
      var color=Color.FromArgb((side==0?top:bottom)?alpha:(byte)255,0,0,0);
      var current=stop.Color;stop.BeginAnimation(GradientStop.ColorProperty,null);stop.Color=color;

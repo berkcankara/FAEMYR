@@ -13,7 +13,9 @@ public static class AlbumGrouping
  {
   var changed=new List<Track>();foreach(var album in tracks.GroupBy(t=>t.AlbumArtist+"\u001f"+t.Album))
   {
-   var byFolder=album.GroupBy(Folder,StringComparer.OrdinalIgnoreCase).ToArray();var releases=byFolder.Select(folder=>new{Tracks=folder.ToArray(),Folder=folder.Key,Id=folder.Select(t=>Tag(t,"MUSICBRAINZALBUMID","MUSICBRAINZRELEASEID")).FirstOrDefault(s=>s.Length>0)??folder.Key}).GroupBy(g=>g.Id,StringComparer.OrdinalIgnoreCase).ToArray();
+   var byFolder=album.GroupBy(Folder,StringComparer.OrdinalIgnoreCase).ToArray();
+   if(byFolder.Length<2)continue;
+   var releases=byFolder.Select(folder=>new{Tracks=folder.ToArray(),Folder=folder.Key,Id=folder.Select(t=>Tag(t,"MUSICBRAINZALBUMID","MUSICBRAINZRELEASEID")).FirstOrDefault(s=>s.Length>0)??folder.Key}).GroupBy(g=>g.Id,StringComparer.OrdinalIgnoreCase).ToArray();
    if(releases.Length<=1)continue;
    foreach(var release in releases)
    {

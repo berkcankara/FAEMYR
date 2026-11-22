@@ -20,6 +20,10 @@ public static class LibrarySyncTests
    string root=Path.Combine(directory,"music");Directory.CreateDirectory(root);
    Track Make(string path){Directory.CreateDirectory(Path.GetDirectoryName(path)!);var format=new WaveFormat(44100,16,2);using(var writer=new WaveFileWriter(path,format))writer.Write(new byte[format.AverageBytesPerSecond],0,format.AverageBytesPerSecond);return new(){Path=path,Title=Path.GetFileNameWithoutExtension(path),Artist="Artist",AlbumArtist="Artist",Album=Path.GetFileNameWithoutExtension(path),Seconds=1,Codec="pcm_s16le",Bits=16,SampleRate=44100,Channels=2,Modified=File.GetLastWriteTimeUtc(path).Ticks};}
    var live=Make(Path.Combine(root,"live.wav"));var deleted=Make(Path.Combine(root,"deleted.wav"));File.Delete(deleted.Path);
+   var savedQueue=new PlayerSession{Queue=[live.Path,live.Path],QueueIndex=1,TrackPath=live.Path};
+   int probes=0;var restored=savedQueue.Resolve([live],path=>{probes++;return File.Exists(path);});
+   Check(probes==1&&restored.Queue.Count==2&&restored.Index==1&&restored.Current==live,"Repeated queue entries restore independently after one file availability check");
+   Check(!new WaveformData{Low=null!}.Valid,"A corrupt cached waveform with a null band is rejected for regeneration");
    var sub=Make(Path.Combine(root,"album","sub.wav"));File.Delete(sub.Path);Directory.Delete(Path.GetDirectoryName(sub.Path)!);
    var offline=live.Copy();offline.Path=Path.Combine(directory,"disconnected","keep.wav");
    var other=live.Copy();other.Path=Path.Combine(root+"-other","keep.wav");
@@ -38,6 +42,16 @@ public static class LibrarySyncTests
    Environment.SetEnvironmentVariable("LYRA_ARTIST_PHOTOS_OFFLINE","1");window=new MainWindow{Opacity=0,ShowInTaskbar=false};window.Show();
    await Wait(()=>Field<bool>(window,"libraryReady")&&!Field<List<Track>>(window,"library").Any(t=>t.Path==deleted.Path));
    var library=Field<List<Track>>(window,"library");Check(!library.Any(t=>t.Path==sub.Path)&&library.Any(t=>t.Path==offline.Path)&&library.Any(t=>t.Path==cue.Path),"Startup reconciles stale DB records and preserves unavailable drives and valid CUE tracks");
+   var albums=Field<ListBox>(window,"Albums");var before=albums.ItemsSource;Set(window,"libraryReconcilePending",true);
+   await (Task)Call(window,"ImportChangedFiles")!;
+   Check(before!=null&&ReferenceEquals(before,albums.ItemsSource),"An unchanged folder check preserves the bound gallery and scroll state");
+   var tagged=live.Copy();tagged.Fields=[new("REPLAYGAIN_TRACK_GAIN","-6 dB"),new("REPLAYGAIN_ALBUM_GAIN","-3 dB")];
+   foreach(var mode in new[]{GainMode.Off,GainMode.Track,GainMode.Album})
+   {
+    var prefs=new AudioPreferences{ReplayGain=mode};
+    var plan=(PlaybackPlan)Call(window,"MakePlaybackPlan",tagged,prefs)!;
+    Check(plan.GainFor(tagged)==ReplayGain.Decide(tagged,prefs),"Playback plan keeps the expected gain for mode "+mode);
+   }
    var favorites=Field<FavoriteStore>(window,"favorites");favorites.SetTrackFavorite(watched.Path,true);favorites.SetRating(watched.Path,5);var playlists=Field<PlaylistStore>(window,"playlists");var playlist=new LocalPlaylist{Name="Keep references",Tracks=[watched.Path]};playlists.Items.Add(playlist);playlists.Save();
    Call(window,"EnqueueTracks",new Track[]{library.Single(t=>t.Path==watched.Path),library.Single(t=>t.Path==live.Path)},false);
    File.Delete(watched.Path);await Wait(()=>!library.Any(t=>t.Path==watched.Path));Check(Field<List<Track>>(window,"queue").Select(t=>t.Path).SequenceEqual([live.Path]),"Live file deletion removes its queue rows while preserving remaining order");

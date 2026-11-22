@@ -18,6 +18,9 @@ public static class DesktopApplicationRegistrationTests
    Check(Path.GetFileNameWithoutExtension(created.Shortcut)=="Faemyr","The Windows shortcut catalog receives the display name Faemyr");
    var written=File.GetLastWriteTimeUtc(created.Shortcut);var unchanged=DesktopApplicationRegistration.Register(programs,executable);
    Check(unchanged.Registered&&!unchanged.Changed&&File.GetLastWriteTimeUtc(created.Shortcut)==written,"Normal startups do not rewrite the shortcut or repeatedly notify the shell");
+   string dedicatedIcon=Path.Combine(app,AppBrand.ShortcutIcon);File.Copy(Path.Combine(AppContext.BaseDirectory,AppBrand.ShortcutIcon),dedicatedIcon);
+   var branded=DesktopApplicationRegistration.Register(programs,executable);Check(branded.Changed&&DesktopApplicationRegistration.Inspect(branded.Shortcut).Icon==dedicatedIcon,"Existing shortcuts migrate to the new dedicated brand icon instead of reusing the stale executable icon cache");
+   Check(!DesktopApplicationRegistration.Register(programs,executable).Changed,"An updated shortcut need not be rewritten again");
    string movedFolder=Path.Combine(directory,"Moved Faemyr");Directory.CreateDirectory(movedFolder);string moved=Path.Combine(movedFolder,"Faemyr.exe");File.Copy(executable,moved);
    var updated=DesktopApplicationRegistration.Register(programs,moved);Check(updated.Registered&&updated.Changed&&DesktopApplicationRegistration.Inspect(updated.Shortcut).Target==moved,"Moving the portable app repairs the managed shortcut target");
    File.WriteAllText(created.Shortcut,"Incomplete shortcut");var repaired=DesktopApplicationRegistration.Register(programs,moved);Check(repaired.Registered&&repaired.Changed&&DesktopApplicationRegistration.Inspect(repaired.Shortcut).Target==moved,"An incomplete Faemyr shortcut is repaired");

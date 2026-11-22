@@ -5,6 +5,19 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace Faemyr;
+// Measure the square from the available column width in the same layout pass.
+// Binding Height to ActualWidth makes recycled gallery rows jump as their
+// width is updated after the virtualizing panel has estimated row heights.
+public sealed class SquareGalleryImage : Border
+{
+ protected override Size MeasureOverride(Size constraint)
+ {
+  if(!double.IsFinite(constraint.Width))return base.MeasureOverride(constraint);
+  double side=Math.Max(0,constraint.Width);
+  base.MeasureOverride(new Size(side,side));
+  return new Size(side,side);
+ }
+}
 public static class RoundedClip
 {
  public static readonly DependencyProperty RadiusProperty=DependencyProperty.RegisterAttached("Radius",typeof(double),typeof(RoundedClip),new PropertyMetadata(0d,Changed));
@@ -22,22 +35,29 @@ public class ThumbnailImage : Image
  public string? Path{get=>(string?)GetValue(PathProperty);set=>SetValue(PathProperty,value);}
  public double Radius{get=>(double)GetValue(RadiusProperty);set=>SetValue(RadiusProperty,value);}
  public int DecodePixelWidth{get=>(int)GetValue(DecodePixelWidthProperty);set=>SetValue(DecodePixelWidthProperty,value);}
- int generation;
- public ThumbnailImage(){Loaded+=(_,_)=>Reload();Unloaded+=(_,_)=>{generation++;Source=null;};SizeChanged+=(_,_)=>Clip=new RectangleGeometry(new Rect(RenderSize),Radius,Radius);}
- static void Changed(DependencyObject sender,DependencyPropertyChangedEventArgs e){var image=(ThumbnailImage)sender;if(image.IsLoaded)image.Reload();}
+ int generation;bool scheduled;
+ public ThumbnailImage(){Loaded+=(_,_)=>ScheduleReload();Unloaded+=(_,_)=>{generation++;Source=null;};SizeChanged+=(_,_)=>Clip=new RectangleGeometry(new Rect(RenderSize),Radius,Radius);}
+ static void Changed(DependencyObject sender,DependencyPropertyChangedEventArgs e){var image=(ThumbnailImage)sender;image.generation++;image.Source=null;if(image.IsLoaded)image.ScheduleReload();}
+ void ScheduleReload()
+ {
+  if(scheduled)return;scheduled=true;
+  Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background,new Action(()=>{scheduled=false;if(IsLoaded)Reload();}));
+ }
  async void Reload()
  {
-  int request=++generation;string? path=Path;Source=null;
+  int request=++generation;string? path=Path;
   var image=await ThumbnailCache.Load(path,DecodePixelWidth);
   if(IsLoaded&&generation==request&&Path==path)Source=image;
  }
 }
 public static class ThumbnailCache
 {
- const int Capacity=128;
+ const int Capacity=640;
+ public const long MemoryBudget=192L*1024*1024;
+ static long cachedBytes;
  static readonly object gate=new();
  static readonly SemaphoreSlim decoders=new(2);
- static readonly Dictionary<string,(BitmapSource Image,LinkedListNode<string> Node)> images=new(StringComparer.OrdinalIgnoreCase);
+ static readonly Dictionary<string,(BitmapSource Image,LinkedListNode<string> Node,long Bytes)> images=new(StringComparer.OrdinalIgnoreCase);
  static readonly LinkedList<string> recent=new();
  static readonly Dictionary<string,Task<BitmapSource?>> loading=new(StringComparer.OrdinalIgnoreCase);
  public static Task<BitmapSource?> Load(string? path,int decodeWidth=320)
@@ -68,12 +88,17 @@ public static class ThumbnailCache
    loading.Remove(key);
    if(result!=null)
    {
-    var node=recent.AddFirst(key);images[key]=(result,node);
-    while(images.Count>Capacity){string oldest=recent.Last!.Value;recent.RemoveLast();images.Remove(oldest);}
+    long bytes=(long)result.PixelHeight*((((long)result.PixelWidth*result.Format.BitsPerPixel+31)/32)*4);
+    if(bytes<=MemoryBudget)
+    {
+     var node=recent.AddFirst(key);images[key]=(result,node,bytes);cachedBytes+=bytes;
+     while(images.Count>Capacity||cachedBytes>MemoryBudget){string oldest=recent.Last!.Value;recent.RemoveLast();cachedBytes-=images[oldest].Bytes;images.Remove(oldest);}
+    }
    }
   }
   return result;
  }
  public static async Task WhenIdle(){Task[] pending;lock(gate)pending=loading.Values.Cast<Task>().ToArray();await Task.WhenAll(pending);}
  public static int CachedCount{get{lock(gate)return images.Count;}}
+ public static long CachedBytes{get{lock(gate)return cachedBytes;}}
 }

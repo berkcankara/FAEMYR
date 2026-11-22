@@ -29,7 +29,7 @@ ShowLanguageDialog=no
 LanguageDetectionMethod=uilanguage
 WizardStyle=modern
 SetupIconFile=..\Source\Assets\Faemyr.ico
-UninstallDisplayIcon={app}\Faemyr.exe
+UninstallDisplayIcon={app}\Faemyr-brand-v2.ico
 OutputDir={#ReleaseDir}
 OutputBaseFilename=Faemyr-{#AppVersion}-Windows-x64-Setup
 Compression=lzma2/fast
@@ -73,8 +73,8 @@ Type: files; Name: "{app}\Lyra.runtimeconfig.json"; Check: IsLegacyInstall
 Type: files; Name: "{app}\Lyra.pdb"; Check: IsLegacyInstall
 
 [Icons]
-Name: "{userprograms}\Faemyr\Faemyr"; Filename: "{app}\Faemyr.exe"; WorkingDir: "{app}"; IconFilename: "{app}\Faemyr.exe"; Tasks: startmenu
-Name: "{userdesktop}\Faemyr"; Filename: "{app}\Faemyr.exe"; WorkingDir: "{app}"; IconFilename: "{app}\Faemyr.exe"; Tasks: desktopicon
+Name: "{userprograms}\Faemyr\Faemyr"; Filename: "{app}\Faemyr.exe"; WorkingDir: "{app}"; IconFilename: "{app}\Faemyr-brand-v2.ico"; Tasks: startmenu
+Name: "{userdesktop}\Faemyr"; Filename: "{app}\Faemyr.exe"; WorkingDir: "{app}"; IconFilename: "{app}\Faemyr-brand-v2.ico"; Tasks: desktopicon
 
 [Run]
 Filename: "{app}\Faemyr.exe"; Description: "{cm:Launch}"; Flags: nowait postinstall skipifsilent

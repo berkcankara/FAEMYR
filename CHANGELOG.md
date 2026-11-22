@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.10.53
+
+- Reduced library startup work and moved saved queue availability checks off the UI thread.
+- Reused artist credit parsing and numeric search conditions within collection queries.
+- Reduced repeated gallery refreshes during folder checks and limited edition analysis to affected albums during import.
+- Reused gallery row positions while scrolling and shared repeated metadata tags in memory.
+- Skipped album-wide ReplayGain lookups during playback setup in track and off modes.
+- Released completed waveform work for removed tracks and recovered from null waveform bands in older or damaged cache files.
+- Skipped redundant updates to the title bar, volume controls and mini player mode indicators.
+
+## 0.10.52
+
+- Stabilized pixel-based scrolling in album and artist galleries, including letter-grouped rows and reversing direction at the bottom.
+- Kept a larger, memory-bounded artwork cache and reduced redundant artist portrait loads and edge-fade work.
+- Added active-mode dots beneath shuffle and repeat in the main, fullscreen and mini players.
+
+## 0.10.51
+
+- Fixed stale Windows Start menu and desktop shortcut icons by introducing a dedicated versioned icon file and updating shortcut generation.
+
+## 0.10.50
+
+- Introduced the new Faemyr app icon: a flowing F monogram with an integrated star. Updated Windows executable, window, taskbar, shortcut and installer artwork.
+
 ## 0.10.49
 
 - Completed the Faemyr rebrand across the project, icon, installer and repository names.

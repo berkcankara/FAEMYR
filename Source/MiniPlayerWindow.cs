@@ -18,6 +18,7 @@ public sealed class MiniPlayerWindow : Window
  readonly Slider volume=new(){Minimum=0,Maximum=100,IsMoveToPointEnabled=true,Width=78};
  readonly SvgIcon playIcon=new(){Icon="play",Width=21,Height=21},volumeIcon=new(){Icon="volume",Width=16,Height=16},pinIcon=new(){Icon="pin",Width=14,Height=14},shuffleIcon=new(){Icon="shuffle",Width=16,Height=16},repeatIcon=new(){Icon="repeat",Width=16,Height=16};
  readonly TextBlock repeatOne=new(){Text="1",FontSize=8,FontWeight=FontWeights.Bold,HorizontalAlignment=HorizontalAlignment.Center,VerticalAlignment=VerticalAlignment.Center,Visibility=Visibility.Collapsed};
+ readonly Ellipse shuffleActiveDot=ModeDot(),repeatActiveDot=ModeDot();
  readonly Button mute,shuffleButton,repeatButton,expandButton,shrinkButton;readonly Border footer;readonly Grid art,root;readonly ColumnDefinition coverColumn;readonly StackPanel tools,info;readonly ThumbButtonInfo taskPlay;
  readonly Grid frostedFooter=new(){VerticalAlignment=VerticalAlignment.Bottom,Height=280,ClipToBounds=true,IsHitTestVisible=false,Visibility=Visibility.Collapsed};
  readonly Rectangle frostBackdrop=new(){Effect=new BlurEffect{Radius=22,RenderingBias=RenderingBias.Performance}};
@@ -44,11 +45,11 @@ public sealed class MiniPlayerWindow : Window
   shrinkButton=IconButton("fullscreen-exit",L.T("Kapağı küçült"),30);shrinkButton.HorizontalAlignment=HorizontalAlignment.Left;shrinkButton.VerticalAlignment=VerticalAlignment.Top;shrinkButton.Margin=new Thickness(12);shrinkButton.Visibility=Visibility.Collapsed;shrinkButton.Click+=(_,_)=>SetArtworkExpanded(false);root.Children.Add(shrinkButton);
   var controls=new Grid();controls.ColumnDefinitions.Add(new(){Width=new GridLength(1,GridUnitType.Star)});controls.ColumnDefinitions.Add(new(){Width=GridLength.Auto});Grid.SetRow(controls,1);grid.Children.Add(controls);
   var transport=new StackPanel{Orientation=Orientation.Horizontal,VerticalAlignment=VerticalAlignment.Center};controls.Children.Add(transport);
-  shuffleButton=IconButton("shuffle",L.T("Karışık çalma"),28);shuffleButton.Content=shuffleIcon;shuffleButton.Click+=async(_,_)=>await action(DesktopMediaAction.Shuffle);transport.Children.Add(shuffleButton);
+  shuffleButton=IconButton("shuffle",L.T("Karışık çalma"),28);var shuffle=new Grid{Width=24,Height=26};shuffle.Children.Add(shuffleIcon);shuffle.Children.Add(shuffleActiveDot);shuffleButton.Content=shuffle;shuffleButton.Click+=async(_,_)=>await action(DesktopMediaAction.Shuffle);transport.Children.Add(shuffleButton);
   var previous=IconButton("previous",L.T("Önceki parça"),30);previous.Click+=async(_,_)=>await action(DesktopMediaAction.Previous);transport.Children.Add(previous);
   var play=IconButton("play",L.T("Oynat / duraklat"),42);play.Margin=new Thickness(5,0,5,0);play.SetResourceReference(Control.BackgroundProperty,"Accent");playIcon.SetResourceReference(SvgIcon.BrushProperty,"OnAccent");play.Content=playIcon;play.Click+=async(_,_)=>await action(DesktopMediaAction.Toggle);transport.Children.Add(play);
   var next=IconButton("next",L.T("Sonraki parça"),30);next.Click+=async(_,_)=>await action(DesktopMediaAction.Next);transport.Children.Add(next);
-  repeatButton=IconButton("repeat",L.T("Tekrar"),28);var repeat=new Grid();repeat.Children.Add(repeatIcon);repeatOne.SetResourceReference(TextBlock.ForegroundProperty,"Accent");repeat.Children.Add(repeatOne);repeatButton.Content=repeat;repeatButton.Click+=async(_,_)=>await action(DesktopMediaAction.Repeat);transport.Children.Add(repeatButton);
+  repeatButton=IconButton("repeat",L.T("Tekrar"),28);var repeat=new Grid{Width=24,Height=26};repeat.Children.Add(repeatIcon);repeatOne.SetResourceReference(TextBlock.ForegroundProperty,"Accent");repeat.Children.Add(repeatOne);repeat.Children.Add(repeatActiveDot);repeatButton.Content=repeat;repeatButton.Click+=async(_,_)=>await action(DesktopMediaAction.Repeat);transport.Children.Add(repeatButton);
   var sound=new StackPanel{Orientation=Orientation.Horizontal,VerticalAlignment=VerticalAlignment.Center,Margin=new Thickness(8,0,0,0)};Grid.SetColumn(sound,1);controls.Children.Add(sound);mute=IconButton("volume",L.T("Sessize al"),28);mute.Content=volumeIcon;volumeIcon.SetResourceReference(SvgIcon.BrushProperty,"Muted");mute.Click+=(_,_)=>this.toggleMute();sound.Children.Add(mute);volume.SetResourceReference(StyleProperty,"ModernSeek");volume.ToolTip=L.T("Ses seviyesi");sound.Children.Add(volume);
   seek.SetResourceReference(StyleProperty,"ModernSeek");seek.Margin=new Thickness(0,6,0,0);seek.ToolTip=L.T("Akış çubuğu");Grid.SetRow(seek,2);grid.Children.Add(seek);
   volume.ValueChanged+=(_,_)=>{if(!updating)this.changeVolume(volume.Value);};seek.PreviewMouseLeftButtonDown+=(_,_)=>seeking=true;seek.LostMouseCapture+=(_,_)=>CommitSeek();seek.PreviewMouseLeftButtonUp+=(_,_)=>Dispatcher.BeginInvoke(CommitSeek);seek.PreviewKeyUp+=(_,e)=>{if(e.Key is Key.Left or Key.Right or Key.Home or Key.End)this.seekTo(seek.Value);};
@@ -59,6 +60,7 @@ public sealed class MiniPlayerWindow : Window
   var taskbar=new TaskbarItemInfo();TaskbarItemInfo=taskbar;foreach(var command in new[]{DesktopMediaAction.Previous,DesktopMediaAction.Toggle,DesktopMediaAction.Next}){var button=new ThumbButtonInfo{Description=L.T(command==DesktopMediaAction.Previous?"Önceki parça":command==DesktopMediaAction.Next?"Sonraki parça":"Oynat / duraklat"),ImageSource=SvgIcon.ShellImage(command==DesktopMediaAction.Previous?"previous":command==DesktopMediaAction.Next?"next":"play"),DismissWhenClicked=false};button.Click+=async(_,_)=>await action(command);taskbar.ThumbButtonInfos.Add(button);}taskPlay=taskbar.ThumbButtonInfos[1];SyncModes(false,RepeatMode.Off);UpdateLayoutSizes();
  }
  static Button IconButton(string icon,string hint,double size){var image=new SvgIcon{Icon=icon,Width=size>30?18:14,Height=size>30?18:14};image.SetResourceReference(SvgIcon.BrushProperty,"Ink");var button=new Button{Content=image,ToolTip=hint,Width=size,Height=size,Margin=new Thickness(0),Padding=new Thickness(0),Style=(Style)Application.Current.FindResource("TransportButton"),FocusVisualStyle=null};System.Windows.Automation.AutomationProperties.SetName(button,hint);return button;}
+ static Ellipse ModeDot(){var dot=new Ellipse{Width=4,Height=4,HorizontalAlignment=HorizontalAlignment.Center,VerticalAlignment=VerticalAlignment.Bottom,Visibility=Visibility.Hidden,IsHitTestVisible=false};dot.SetResourceReference(Shape.FillProperty,"Accent");return dot;}
  static bool Interactive(object source){for(DependencyObject? node=source as DependencyObject;node!=null;node=node is FrameworkContentElement content?content.Parent:node is Visual?VisualTreeHelper.GetParent(node):LogicalTreeHelper.GetParent(node))if(node is ButtonBase or Slider or Thumb or System.Windows.Documents.Hyperlink or ArtistLinks)return true;return false;}
  static void Fade(UIElement view,double opacity){view.BeginAnimation(OpacityProperty,new DoubleAnimation(opacity,TimeSpan.FromMilliseconds(160)));}
  void ShowArtworkControls(bool visible){if(!ArtworkExpanded)return;title.MotionEnabled=visible;Fade(frostedFooter,visible?1:0);Fade(footer,visible?1:0);Fade(tools,visible?1:0);Fade(shrinkButton,visible?1:0);}
@@ -107,9 +109,13 @@ public sealed class MiniPlayerWindow : Window
   }
  }
  public void SyncPin()=>pinIcon.SetResourceReference(SvgIcon.BrushProperty,Topmost?"Accent":"Muted");
+ (bool Shuffle,RepeatMode Repeat,string Language)? displayedModes;
  public void SyncModes(bool shuffle,RepeatMode repeat)
  {
+  var modes=(shuffle,repeat,L.Current);if(displayedModes==modes)return;displayedModes=modes;
   shuffleIcon.SetResourceReference(SvgIcon.BrushProperty,shuffle?"Accent":"Muted");repeatIcon.SetResourceReference(SvgIcon.BrushProperty,repeat==RepeatMode.Off?"Muted":"Accent");repeatOne.Visibility=repeat==RepeatMode.One?Visibility.Visible:Visibility.Collapsed;
+  shuffleActiveDot.Visibility=shuffle?Visibility.Visible:Visibility.Hidden;repeatActiveDot.Visibility=repeat!=RepeatMode.Off?Visibility.Visible:Visibility.Hidden;
+  System.Windows.Automation.AutomationProperties.SetItemStatus(shuffleButton,L.T(shuffle?"açık":"kapalı"));System.Windows.Automation.AutomationProperties.SetItemStatus(repeatButton,L.T(repeat==RepeatMode.Off?"kapalı":repeat==RepeatMode.All?"tüm kuyruk":"tek parça"));
   shuffleButton.ToolTip=L.T("Karışık çalma: ")+(shuffle?L.T("açık"):L.T("kapalı"));repeatButton.ToolTip=L.T("Tekrar: ")+(repeat==RepeatMode.Off?L.T("kapalı"):repeat==RepeatMode.All?L.T("tüm kuyruk"):L.T("tek parça"));
  }
  public void Sync(Track? track,bool playing,TimeSpan position,TimeSpan duration,double level,bool muted,bool dop)

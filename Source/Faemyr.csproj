@@ -4,7 +4,7 @@
     <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
     <UseWPF>true</UseWPF><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier><AssemblyName>Faemyr</AssemblyName><RootNamespace>Faemyr</RootNamespace>
-    <Version>0.10.49</Version><Product>Faemyr</Product><Title>Faemyr</Title><ApplicationManifest>app.manifest</ApplicationManifest><ApplicationIcon>Assets\Faemyr.ico</ApplicationIcon>
+    <Version>0.10.53</Version><Product>Faemyr</Product><Title>Faemyr</Title><ApplicationManifest>app.manifest</ApplicationManifest><ApplicationIcon>Assets\Faemyr.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup><PackageReference Include="NAudio" Version="2.2.1"/><PackageReference Include="TagLibSharp" Version="2.3.0"/><PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.11"/></ItemGroup>
-<ItemGroup><EmbeddedResource Include="Assets\Icons\*.svg" /><EmbeddedResource Include="Assets\en.json" /><Resource Include="Assets\Faemyr.ico" /></ItemGroup></Project>
+<ItemGroup><EmbeddedResource Include="Assets\Icons\*.svg" /><EmbeddedResource Include="Assets\en.json" /><Resource Include="Assets\Faemyr.ico" /><Content Include="..\Icon\Faemyr.ico" Link="Faemyr-brand-v2.ico" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" /></ItemGroup></Project>

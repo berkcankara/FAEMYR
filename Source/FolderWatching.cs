@@ -56,12 +56,14 @@ public partial class MainWindow
   if(closed||importing||reconcilingLibrary||scanCts!=null||(!libraryReconcilePending&&changedPaths.Count==0))return;importing=true;
   try
   {
+   bool imported=false;
    var batch=changedPaths.Take(12).ToList();foreach(var item in batch){changedPaths.Remove(item.Key);if(!File.Exists(item.Key))continue;
     try{var cuePaths=library.Where(t=>t.IsCue&&t.AudioPath.Equals(item.Key,StringComparison.OrdinalIgnoreCase)).Select(t=>t.CueSheetPath).Distinct(StringComparer.OrdinalIgnoreCase).Where(File.Exists).ToArray();if(cuePaths.Length>0){foreach(var cue in cuePaths){var tracks=await Task.Run(()=>ReadLibraryFile(cue,importsCancelled.Token),importsCancelled.Token);if(closed)return;ApplyImportedTracks(cue,tracks);}}else{var tracks=await Task.Run(()=>ReadLibraryFile(item.Key,importsCancelled.Token),importsCancelled.Token);if(closed)return;ApplyImportedTracks(item.Key,tracks);}}
-    catch(OperationCanceledException){return;}catch(Exception ex){if(!closed){if(item.Value<4&&!changedPaths.ContainsKey(item.Key))changedPaths[item.Key]=item.Value+1;else Status.Text=L.T("Otomatik eklenemedi: ")+System.IO.Path.GetFileName(item.Key)+" · "+ex.Message;}}
+    catch(OperationCanceledException){return;}catch(Exception ex){if(!closed){if(item.Value<4&&!changedPaths.ContainsKey(item.Key))changedPaths[item.Key]=item.Value+1;else Status.Text=L.T("Otomatik eklenemedi: ")+System.IO.Path.GetFileName(item.Key)+" · "+ex.Message;}continue;}
+    imported=true;
    }
    if(!closed&&libraryReconcilePending){libraryReconcilePending=false;await ReconcileLibraryAsync(ct:importsCancelled.Token);}
-   if(!closed)RefreshView();
+   if(imported&&!closed)RefreshView();
   }finally{importing=false;}
  }
  void StopFolderWatching(){watcherGeneration++;importTimer.Stop();importsCancelled.Cancel();foreach(var w in folderWatchers)w.Dispose();folderWatchers.Clear();}

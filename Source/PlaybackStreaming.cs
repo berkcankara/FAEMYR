@@ -5,9 +5,13 @@ public partial class MainWindow
  PlaybackEntry? audibleEntry;
  PlaybackPlan MakePlaybackPlan(Track track,AudioPreferences prefs)
  {
-  var albums=library.Where(t=>!t.IsDsd).ToLookup(t=>t.AlbumKey);var snapshot=queue.ToArray();int index=queueIndex;
-  var playbackOrder=order;if(index<0||index>=snapshot.Length||snapshot[index].Path!=track.Path){snapshot=[track];index=0;playbackOrder=new PlaybackOrder();}
-  return new(snapshot,index,playbackOrder,t=>ReplayGain.Decide(t,prefs,gainStore.Get(t,prefs.ReplayGain,albums[t.AlbumKey])),playbackPreferences.Gapless);
+  var albums=prefs.ReplayGain==GainMode.Album?library.Where(t=>!t.IsDsd).ToLookup(t=>t.AlbumKey):null;
+  GainDecision Gain(Track t)=>prefs.ReplayGain==GainMode.Off?GainDecision.Off:
+   ReplayGain.Decide(t,prefs,gainStore.Get(t,prefs.ReplayGain,albums==null?Array.Empty<Track>():albums[t.AlbumKey]));
+  int index=queueIndex;
+  if(index<0||index>=queue.Count||queue[index].Path!=track.Path)
+   return new([track],0,new PlaybackOrder(),Gain,playbackPreferences.Gapless);
+  return new(queue,index,order,Gain,playbackPreferences.Gapless);
  }
  void UpdateStreamTrack()
  {

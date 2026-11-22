@@ -79,5 +79,13 @@ public static class Themes
 public partial class MainWindow
 {
  void InitializeThemes()=>UpdateAccentControls();
- void UpdateAccentControls(){ShuffleButton.SetResourceReference(System.Windows.Controls.Control.ForegroundProperty,order.Shuffle?"Accent":"Ink");RepeatButton.SetResourceReference(System.Windows.Controls.Control.ForegroundProperty,order.Repeat==RepeatMode.Off?"Ink":"Accent");}
+ void UpdateAccentControls()
+ {
+  ShuffleButton.SetResourceReference(System.Windows.Controls.Control.ForegroundProperty,order.Shuffle?"Accent":"Ink");
+  RepeatButton.SetResourceReference(System.Windows.Controls.Control.ForegroundProperty,order.Repeat==RepeatMode.Off?"Ink":"Accent");
+  ShuffleActiveDot.Visibility=order.Shuffle?Visibility.Visible:Visibility.Hidden;
+  RepeatActiveDot.Visibility=order.Repeat!=RepeatMode.Off?Visibility.Visible:Visibility.Hidden;
+  System.Windows.Automation.AutomationProperties.SetItemStatus(ShuffleButton,L.T(order.Shuffle?"açık":"kapalı"));
+  System.Windows.Automation.AutomationProperties.SetItemStatus(RepeatButton,L.T(order.Repeat==RepeatMode.Off?"kapalı":order.Repeat==RepeatMode.All?"tüm kuyruk":"tek parça"));
+ }
 }

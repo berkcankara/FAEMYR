@@ -1,4 +1,4 @@
-# Faemyr — Lossless Music Player
+# Faemyr — Local Music Player
 
 Faemyr is a customizable, local-first music player for Windows, combining high-resolution audio with a modern modular interface and a personal music library. Current version: **0.10.49**.
 
@@ -19,7 +19,7 @@ Faemyr plays the music files on your computer. Library scanning, artwork and aud
 
 ## Install on Windows
 
-1. Download the `Windows-x64-Setup.exe` file from [Releases](https://github.com/berkcankara/FAEMYR-Lossless-Music-Player/releases).
+1. Download the `Windows-x64-Setup.exe` file from [Releases](https://github.com/berkcankara/FAEMYR/releases).
 2. Run the installer and choose the installation directory.
 3. Select the Start menu and desktop shortcut options (both are selected by default).
 4. Complete installation and open Faemyr.
@@ -31,7 +31,7 @@ When upgrading from Lyra, choose the existing installation directory. Your libra
 
 ## Portable edition
 
-1. Download the Windows x64 Portable ZIP from [Releases](https://github.com/berkcankara/FAEMYR-Lossless-Music-Player/releases).
+1. Download the Windows x64 Portable ZIP from [Releases](https://github.com/berkcankara/FAEMYR/releases).
 2. Extract the **entire** archive into a writable folder.
 3. Open `Faemyr/Faemyr.exe` and add your music folders in Settings.
 

@@ -17,6 +17,44 @@ Faemyr plays the music files on your computer. Library scanning, artwork and aud
 - Fullscreen and resizable mini player, track notifications, keyboard media keys, and Windows taskbar/media controls.
 - Modular interface with customizable themes, accent colors, artwork backgrounds, translucent panels and a pure-black OLED theme.
 
+## Screenshots and feature demos
+
+Captured from the Windows 0.10.54 development build. The latest released version may have a slightly different interface.
+
+![Faemyr album library with modular panels and album artwork backgrounds](docs/media/01-album-library.jpg)
+
+| Album details and waveform previews | Artist library |
+| --- | --- |
+| [![Album details](docs/media/02-album-details.jpg)](docs/media/02-album-details.jpg) | [![Artists](docs/media/03-artist-library.jpg)](docs/media/03-artist-library.jpg) |
+| **Artist profiles** | **Instant library search (development build)** |
+| [![Artist profile](docs/media/04-artist-profile.jpg)](docs/media/04-artist-profile.jpg) | [![Instant search](docs/media/05-instant-search.jpg)](docs/media/05-instant-search.jpg) |
+
+### Real-time audio visualizers
+
+Four live modes captured during playback: oscilloscope, spectrum analyzer, VU meter and spectrogram.
+
+![Four real-time audio visualizer modes](docs/media/visualizers.gif)
+
+### Fullscreen player and synchronized lyrics
+
+![Synchronized fullscreen lyrics during playback](docs/media/fullscreen-lyrics.gif)
+
+[View the full-resolution fullscreen screenshot](docs/media/07-fullscreen-lyrics.jpg).
+
+### High-resolution audio and customization
+
+| 24-bit / 192 kHz FLAC source metadata and actual output signal path | Colors, themes and module transparency |
+| --- | --- |
+| [![High-resolution audio details](docs/media/06-hi-res-audio.jpg)](docs/media/06-hi-res-audio.jpg) | [![Appearance settings](docs/media/10-customization.jpg)](docs/media/10-customization.jpg) |
+
+[View automatic and manual audio output settings](docs/media/11-audio-settings.jpg).
+
+### Mini player
+
+<img src="docs/media/09-mini-compact.jpg" alt="Compact mini player" width="350"> <img src="docs/media/08-mini-player.jpg" alt="Expanded mini player with cover artwork" width="400">
+
+The screenshots are examples of the interface; music, album artwork, lyrics and artist images remain the property of their respective rights holders.
+
 ## Install on Windows
 
 1. Download the `Windows-x64-Setup.exe` file from [Releases](https://github.com/berkcankara/FAEMYR/releases).

@@ -31,7 +31,7 @@ Captured from the Windows 0.10.54 development build. The latest released version
 
 ### Real-time audio visualizers
 
-Four live modes captured during playback: oscilloscope, spectrum analyzer, VU meter and spectrogram.
+Four live modes captured during playback of Benny Benassi's “Satisfaction (Isak Original Extended)”: oscilloscope, spectrum analyzer, VU meter and spectrogram.
 
 ![Four real-time audio visualizer modes](docs/media/visualizers.gif)
 

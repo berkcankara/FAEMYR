@@ -39,3 +39,9 @@
 # Local development notes are retained on this computer
 /OKU-BENI.md
 /Icon/ISLEM-NOTU.txt
+
+# Native macOS build products
+macOS/.build/
+macOS/.swiftpm/
+App-macOS/
+.DS_Store
